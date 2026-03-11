@@ -1,5 +1,5 @@
 import { useState } from "react";
-import type { CreateSourceRequest, SourceType } from "../types/source";
+import type { CreateSourceRequest, SourceType } from "../../types/document";
 
 type Props = {
   onSubmit: (data: CreateSourceRequest) => Promise<void>;

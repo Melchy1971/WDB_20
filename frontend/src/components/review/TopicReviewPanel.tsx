@@ -1,4 +1,4 @@
-import type { Topic } from "../types/source";
+import type { Topic } from "../../types/document";
 
 type Props = {
   topic: Topic;

@@ -1,5 +1,5 @@
 import { apiGet, apiPost } from "./client";
-import type { Topic, TopicReviewRequest } from "../types/source";
+import type { Topic, TopicReviewRequest } from "../types/document";
 
 export function getTopics(): Promise<Topic[]> {
   return apiGet<Topic[]>("/topics");

@@ -3,7 +3,7 @@ type Props = {
   content: string | null;
 };
 
-export function PreviewPanel({ title, content }: Props) {
+export function PreviewBox({ title, content }: Props) {
   return (
     <section className="preview-panel">
       <h4 className="preview-panel__title">{title}</h4>

@@ -1,5 +1,5 @@
-import type { DocumentItem } from "../types/document";
-import { PreviewPanel } from "./PreviewPanel";
+import type { DocumentItem } from "../../types/document";
+import { PreviewBox } from "./PreviewBox";
 
 export type PersistStatus = "idle" | "saving" | "success" | "error";
 
@@ -33,7 +33,7 @@ export function DocumentCard({ document, persistStatus, persistMessage, onPersis
       </dl>
 
       {document.preview_text && (
-        <PreviewPanel title="Vorschau" content={document.preview_text} />
+        <PreviewBox title="Vorschau" content={document.preview_text} />
       )}
 
       <button

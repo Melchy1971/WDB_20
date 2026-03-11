@@ -1,8 +1,8 @@
 import { useEffect, useState } from "react";
 import { getTopics, reviewTopic } from "../api/topicsApi";
-import { TopicReviewPanel } from "../components/TopicReviewPanel";
-import { StatusBanner } from "../components/StatusBanner";
-import type { Topic } from "../types/source";
+import { TopicReviewPanel } from "../components/review/TopicReviewPanel";
+import { StatusBanner } from "../components/status/StatusBanner";
+import type { Topic } from "../types/document";
 
 export function TopicsReviewPage() {
   const [topics, setTopics] = useState<Topic[]>([]);

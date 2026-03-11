@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
 import { SidebarNav } from "./SidebarNav";
-import type { Page } from "../types/navigation";
+import type { Page } from "../../types/document";
 
 type Props = {
   currentPage: Page;

@@ -1,11 +1,11 @@
 import { useMemo, useState } from "react";
 import { persistDocument } from "../api/persistApi";
 import { scanFolder } from "../api/sourcesApi";
-import { DocumentCard } from "../components/DocumentCard";
-import { FolderScanForm } from "../components/FolderScanForm";
-import { StatusBanner } from "../components/StatusBanner";
+import { DocumentCard } from "../components/documents/DocumentCard";
+import { FolderScanForm } from "../components/sources/FolderScanForm";
+import { StatusBanner } from "../components/status/StatusBanner";
 import type { DocumentItem } from "../types/document";
-import type { PersistStatus } from "../components/DocumentCard";
+import type { PersistStatus } from "../components/documents/DocumentCard";
 
 type PersistState = {
   status: PersistStatus;

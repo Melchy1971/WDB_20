@@ -1,11 +1,11 @@
 import { useState } from "react";
 import "./index.css";
-import { AppLayout } from "./components/AppLayout";
+import { AppLayout } from "./components/layout/AppLayout";
 import { SystemStatusPage } from "./pages/SystemStatusPage";
 import { SourcesPage } from "./pages/SourcesPage";
 import { FolderScanPage } from "./pages/FolderScanPage";
 import { TopicsReviewPage } from "./pages/TopicsReviewPage";
-import type { Page } from "./types/navigation";
+import type { Page } from "./types/document";
 
 function App() {
   const [currentPage, setCurrentPage] = useState<Page>("status");

@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { getHealth } from "../api/systemApi";
-import { StatusCard } from "../components/StatusCard";
-import { StatusBanner } from "../components/StatusBanner";
+import { StatusCard } from "../components/status/StatusCard";
+import { StatusBanner } from "../components/status/StatusBanner";
 import type { HealthResponse } from "../types/system";
 
 export function SystemStatusPage() {

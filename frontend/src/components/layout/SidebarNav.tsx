@@ -1,5 +1,5 @@
-import { NAV_ITEMS } from "../types/navigation";
-import type { Page } from "../types/navigation";
+import { NAV_ITEMS } from "../../types/document";
+import type { Page } from "../../types/document";
 
 type Props = {
   currentPage: Page;

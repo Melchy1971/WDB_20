@@ -1,5 +1,5 @@
 import { apiGet, apiPost } from "./client";
-import type { Source, CreateSourceRequest } from "../types/source";
+import type { Source, CreateSourceRequest } from "../types/document";
 import type { DocumentScanResponse, FolderScanRequest } from "../types/document";
 
 export function getSources(): Promise<Source[]> {

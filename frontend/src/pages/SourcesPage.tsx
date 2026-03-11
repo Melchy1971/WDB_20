@@ -1,8 +1,8 @@
 import { useEffect, useState } from "react";
 import { getSources, createSource } from "../api/sourcesApi";
-import { SourceForm } from "../components/SourceForm";
-import { StatusBanner } from "../components/StatusBanner";
-import type { Source, CreateSourceRequest } from "../types/source";
+import { SourceForm } from "../components/sources/SourceForm";
+import { StatusBanner } from "../components/status/StatusBanner";
+import type { Source, CreateSourceRequest } from "../types/document";
 
 export function SourcesPage() {
   const [sources, setSources] = useState<Source[]>([]);
