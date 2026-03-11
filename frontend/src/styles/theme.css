@@ -1,0 +1,162 @@
+/**
+ * theme.css — Design Tokens · Variante A: Magenta Corporate
+ *
+ * Einzige Wahrheitsquelle für alle visuellen Entscheidungen.
+ * Zur Einbindung offizieller Corporate-Tokens nur diese Datei austauschen.
+ *
+ * Token-Hierarchie:
+ *   --color-primary-*   Primärfarbe (Magenta) — Buttons, Fokus, aktive Nav, Switches
+ *   --color-surface-*   Hintergrundflächen
+ *   --color-border-*    Rahmen
+ *   --color-text-*      Texthierarchie
+ *   --color-status-*    Ampelfarben
+ *   --color-feedback-*  Inline-Meldungen
+ *   --size-*            Abstände, Radien, Schatten
+ *   --font-*            Typografie
+ *   --duration-*        Animationszeiten
+ *   --layout-*          Strukturmaße
+ */
+
+:root {
+
+  /* ────────────────────────────────────────────────────────────
+   * PRIMÄRFARBE — Magenta
+   * Offizieller Telekom-Token: --telekom-color-primary-standard
+   * ──────────────────────────────────────────────────────────── */
+  --color-primary:          #e20074;
+  --color-primary-dark:     #b3005b;
+  --color-primary-subtle:   #fce7f3;
+  --color-primary-light:    #fbd0e8;
+  --color-primary-disabled: #f0a0c8;
+  --color-primary-focus:    rgba(226, 0, 116, 0.15);
+  --color-on-primary:       #ffffff;
+
+  /* ────────────────────────────────────────────────────────────
+   * BRAND (Sidebar-Kachel)
+   * ──────────────────────────────────────────────────────────── */
+  --color-brand:            #e20074;
+  --color-brand-dark:       #b3005b;
+  --color-on-brand:         #ffffff;
+
+  /* ────────────────────────────────────────────────────────────
+   * SURFACES
+   * ──────────────────────────────────────────────────────────── */
+  --color-surface:          #ffffff;
+  --color-surface-subtle:   #f9fafb;
+  --color-surface-code:     #fafbfc;
+  --color-bg:               #f3f5f8;
+
+  /* ────────────────────────────────────────────────────────────
+   * BORDERS
+   * ──────────────────────────────────────────────────────────── */
+  --color-border:           #d8deea;
+  --color-border-input:     #bcc5d6;
+  --color-border-code:      #d9dee3;
+
+  /* ────────────────────────────────────────────────────────────
+   * TEXT
+   * ──────────────────────────────────────────────────────────── */
+  --color-text-base:        #162033;
+  --color-text-primary:     #111827;
+  --color-text-secondary:   #374151;
+  --color-text-body:        #4b5563;
+  --color-text-muted:       #6b7280;
+  --color-text-subtle:      #9ca3af;
+  --color-text-hint:        #49566f;
+
+  /* ────────────────────────────────────────────────────────────
+   * NAVIGATION
+   * ──────────────────────────────────────────────────────────── */
+  --color-nav-text:              #1e3a6e;
+  --color-nav-hover-bg:          var(--color-primary-subtle);
+  --color-nav-active-bg:         var(--color-primary-light);
+  --color-nav-active-text:       var(--color-primary-dark);
+  --color-nav-section:           #666666;
+  --color-nav-muted-text:        #777777;
+  --color-nav-muted-hover-bg:    #f4f5f7;
+  --color-nav-muted-active-bg:   #eaedf4;
+  --color-nav-muted-active-text: #555555;
+
+  /* ────────────────────────────────────────────────────────────
+   * STATUS (Ampelfarben)
+   * ──────────────────────────────────────────────────────────── */
+  --color-status-ok:       #16a34a;
+  --color-status-warning:  #d97706;
+  --color-status-error:    #dc2626;
+  --color-status-unknown:  #9ca3af;
+
+  /* ────────────────────────────────────────────────────────────
+   * FEEDBACK (Inline-Meldungen)
+   * ──────────────────────────────────────────────────────────── */
+  --color-feedback-pending-text: #5e4b00;
+  --color-feedback-pending-bg:   #fff6d8;
+  --color-feedback-success-text: #104f2d;
+  --color-feedback-success-bg:   #daf5e4;
+  --color-feedback-error-text:   #7a1022;
+  --color-feedback-error-bg:     #fbe0e6;
+
+  /* ────────────────────────────────────────────────────────────
+   * TOGGLE
+   * ──────────────────────────────────────────────────────────── */
+  --color-toggle-off:   #d1d5db;
+  --color-toggle-on:    var(--color-primary);
+  --color-toggle-thumb: #ffffff;
+
+  /* ────────────────────────────────────────────────────────────
+   * TYPOGRAFIE
+   * ──────────────────────────────────────────────────────────── */
+  --font-family:           Inter, Arial, system-ui, sans-serif;
+  --font-size-xs:          0.7rem;
+  --font-size-sm:          0.8rem;
+  --font-size-base:        0.875rem;
+  --font-size-md:          0.9rem;
+  --font-size-lg:          0.95rem;
+  --font-size-xl:          1rem;
+  --font-size-2xl:         1.1rem;
+  --font-size-heading:     1.5rem;
+  --font-weight-normal:    400;
+  --font-weight-semibold:  600;
+  --font-weight-bold:      700;
+  --font-weight-extrabold: 800;
+  --line-height:           1.5;
+
+  /* ────────────────────────────────────────────────────────────
+   * ABSTÄNDE (4px-Raster)
+   * ──────────────────────────────────────────────────────────── */
+  --size-1: 4px;
+  --size-2: 8px;
+  --size-3: 12px;
+  --size-4: 16px;
+  --size-5: 20px;
+  --size-6: 24px;
+  --size-7: 28px;
+  --size-8: 32px;
+
+  /* ────────────────────────────────────────────────────────────
+   * RADIEN
+   * ──────────────────────────────────────────────────────────── */
+  --radius-sm:   6px;
+  --radius-md:   8px;
+  --radius-lg:   12px;
+  --radius-full: 9999px;
+
+  /* ────────────────────────────────────────────────────────────
+   * SCHATTEN
+   * ──────────────────────────────────────────────────────────── */
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.07);
+  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.10);
+
+  /* ────────────────────────────────────────────────────────────
+   * ANIMATIONSZEITEN
+   * ──────────────────────────────────────────────────────────── */
+  --duration-fast: 0.12s;
+  --duration-base: 0.15s;
+  --duration-slow: 0.20s;
+
+  /* ────────────────────────────────────────────────────────────
+   * LAYOUT-MASSE
+   * ──────────────────────────────────────────────────────────── */
+  --layout-sidebar-width:  220px;
+  --layout-page-max-width: 1040px;
+  --layout-sidebar-pad:    1.25rem;
+}

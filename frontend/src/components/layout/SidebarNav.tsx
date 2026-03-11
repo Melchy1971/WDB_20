@@ -42,7 +42,13 @@ export function SidebarNav({ activePage, onNavigate }: Props) {
 
   return (
     <nav className="app-sidebar">
-      <h2 className="app-sidebar__title">WDB_20-1</h2>
+      <div className="brand-header">
+        <div className="brand-mark" aria-hidden="true">T</div>
+        <div className="brand-text">
+          <span className="brand-title">TeleMail KP</span>
+          <span className="brand-subtitle">Knowledge Platform</span>
+        </div>
+      </div>
 
       <div className="nav-section">
         <div className="nav-section-title">Aktiv</div>
