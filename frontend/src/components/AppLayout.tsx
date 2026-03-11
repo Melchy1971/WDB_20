@@ -1,12 +1,18 @@
-import type { PropsWithChildren } from 'react'
+import type { ReactNode } from "react";
+import { SidebarNav } from "./SidebarNav";
+import type { Page } from "../types/navigation";
 
-export function AppLayout({ children }: PropsWithChildren) {
+type Props = {
+  currentPage: Page;
+  onNavigate: (page: Page) => void;
+  children: ReactNode;
+};
+
+export function AppLayout({ currentPage, onNavigate, children }: Props) {
   return (
-    <main className="layout">
-      <header>
-        <h1>Mail Knowledge Platform</h1>
-      </header>
-      {children}
-    </main>
-  )
+    <div className="app-layout">
+      <SidebarNav currentPage={currentPage} onNavigate={onNavigate} />
+      <main className="app-main">{children}</main>
+    </div>
+  );
 }

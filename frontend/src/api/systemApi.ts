@@ -1,6 +1,6 @@
-import { apiGet } from './client'
-import type { HealthResponse } from '../types/system'
+import { apiGet } from "./client";
+import type { HealthResponse } from "../types/system";
 
 export function getHealth(): Promise<HealthResponse> {
-  return apiGet<HealthResponse>('/health')
+  return apiGet<HealthResponse>("/health");
 }

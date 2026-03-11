@@ -1,212 +1,104 @@
 import { useMemo, useState } from "react";
 import { persistDocument } from "../api/persistApi";
 import { scanFolder } from "../api/sourcesApi";
+import { DocumentCard } from "../components/DocumentCard";
+import { FolderScanForm } from "../components/FolderScanForm";
+import { StatusBanner } from "../components/StatusBanner";
 import type { DocumentItem } from "../types/document";
+import type { PersistStatus } from "../components/DocumentCard";
 
 type PersistState = {
-  status: "idle" | "saving" | "success" | "error";
+  status: PersistStatus;
   message: string;
 };
 
 export function FolderScanPage() {
-  const [folderPath, setFolderPath] = useState("");
   const [documents, setDocuments] = useState<DocumentItem[]>([]);
   const [isScanning, setIsScanning] = useState(false);
   const [scanError, setScanError] = useState<string | null>(null);
   const [persistStates, setPersistStates] = useState<Record<string, PersistState>>({});
 
-  const hasDocuments = documents.length > 0;
+  const scanSummary = useMemo(
+    () => (documents.length > 0 ? `${documents.length} Datei(en) gefunden.` : null),
+    [documents.length]
+  );
 
-  const scanSummary = useMemo(() => {
-    if (!hasDocuments) {
-      return "Noch keine Dateien geladen.";
-    }
-
-<<<<<<< HEAD
-    return `${documents.length} Textdatei(en) gefunden.`;
-  }, [documents.length, hasDocuments]);
-
-  async function handleScanFolder(): Promise<void> {
+  async function handleScan(folderPath: string): Promise<void> {
     setIsScanning(true);
     setScanError(null);
     setPersistStates({});
-
     try {
-      const response = await scanFolder({ folder_path: folderPath.trim() });
+      const response = await scanFolder({ folder_path: folderPath });
       setDocuments(response.items);
-    } catch (error) {
+    } catch (err) {
       setDocuments([]);
-      setScanError(error instanceof Error ? error.message : "Unbekannter Fehler beim Scannen.");
+      setScanError(
+        err instanceof Error ? err.message : "Unbekannter Fehler beim Scannen."
+      );
     } finally {
       setIsScanning(false);
     }
   }
-=======
-	async function handlePersist(item: DocumentItem) {
-		try {
-			setPersistMessage("");
-			setError("");
-			const result = await persistDocument(item);
-			setPersistMessage(`Gespeichert: ${result.file_path}`);
-		} catch (err) {
-			setError(err instanceof Error ? err.message : "Persistenzfehler");
-		}
-	}
 
-	return (
-		<div className="page">
-			<h1>Dokumentscan</h1>
-
-			<div className="card">
-				<h2>Lokaler Ordnerpfad</h2>
-				<input
-					type="text"
-					value={folderPath}
-					onChange={(e) => setFolderPath(e.target.value)}
-					placeholder="C:\\mail-knowledge-platform\\data\\sample_docs"
-					className="text-input"
-				/>
-				<button onClick={handleScan} disabled={loading || !folderPath} className="action-button">
-					{loading ? "Scanne ..." : "Ordner scannen"}
-				</button>
-			</div>
->>>>>>> a19e3da ( Changes to be committed:)
-
-  async function handlePersistDocument(document: DocumentItem): Promise<void> {
-    setPersistStates((previous) => ({
-      ...previous,
-      [document.file_path]: {
-        status: "saving",
-        message: "Speicherung läuft ...",
-      },
+  async function handlePersist(document: DocumentItem): Promise<void> {
+    setPersistStates((prev) => ({
+      ...prev,
+      [document.file_path]: { status: "saving", message: "Speicherung läuft ..." },
     }));
-
-<<<<<<< HEAD
     try {
       const response = await persistDocument(document);
-
-      setPersistStates((previous) => ({
-        ...previous,
+      setPersistStates((prev) => ({
+        ...prev,
         [document.file_path]: {
           status: "success",
           message: `Erfolgreich gespeichert: ${response.file_path}`,
         },
       }));
-    } catch (error) {
-      const message = error instanceof Error ? error.message : "Unbekannter Fehler beim Speichern.";
-
-      setPersistStates((previous) => ({
-        ...previous,
-        [document.file_path]: {
-          status: "error",
-          message,
-        },
+    } catch (err) {
+      const message =
+        err instanceof Error ? err.message : "Unbekannter Fehler beim Speichern.";
+      setPersistStates((prev) => ({
+        ...prev,
+        [document.file_path]: { status: "error", message },
       }));
     }
   }
 
   return (
-    <main className="page">
-      <h1>Dokumentenimport (Vertical Slice)</h1>
+    <div className="page">
+      <h1>Dokumentenimport</h1>
 
-      <section className="panel">
-        <h2>1) Lokalen Ordner scannen</h2>
-        <label htmlFor="folder-path" className="label">
-          Ordnerpfad
-        </label>
-        <input
-          id="folder-path"
-          className="text-input"
-          type="text"
-          value={folderPath}
-          onChange={(event) => setFolderPath(event.target.value)}
-          placeholder="z. B. /workspace/WDB_20/mail-knowledge-platform/data/sample_docs"
+      <FolderScanForm onScan={handleScan} isLoading={isScanning} />
+
+      {scanError && (
+        <StatusBanner
+          message={scanError}
+          variant="error"
+          onDismiss={() => setScanError(null)}
         />
-        <button
-          className="action-button"
-          type="button"
-          onClick={handleScanFolder}
-          disabled={isScanning || folderPath.trim().length === 0}
-        >
-          {isScanning ? "Scanne Ordner ..." : "Ordner scannen"}
-        </button>
-
-        <p className="hint">{scanSummary}</p>
-        {scanError && <p className="status-message error">{scanError}</p>}
-      </section>
+      )}
+      {scanSummary && <StatusBanner message={scanSummary} variant="success" />}
 
       <section>
-        <h2>2) Gefundene .txt-Dateien</h2>
-        {!hasDocuments && !isScanning && <p className="hint">Keine Dateien zur Anzeige.</p>}
-
+        <h2>Gefundene Dokumente</h2>
+        {documents.length === 0 && !isScanning && (
+          <p className="hint">Noch keine Dateien geladen.</p>
+        )}
         <div className="card-grid">
-          {documents.map((document) => {
-            const persistState = persistStates[document.file_path];
-            const isSaving = persistState?.status === "saving";
-
+          {documents.map((doc) => {
+            const ps = persistStates[doc.file_path] ?? { status: "idle", message: "" };
             return (
-              <article className="card" key={document.file_path}>
-                <h3>{document.file_name}</h3>
-                <p>
-                  <strong>Pfad:</strong> {document.file_path}
-                </p>
-                <p>
-                  <strong>Größe:</strong> {document.size_bytes} Bytes
-                </p>
-                <p>
-                  <strong>Letzte Änderung:</strong> {document.last_modified}
-                </p>
-
-                <button
-                  className="action-button"
-                  type="button"
-                  onClick={() => handlePersistDocument(document)}
-                  disabled={isSaving}
-                >
-                  {isSaving ? "Speichere ..." : "In Neo4j speichern"}
-                </button>
-
-                {persistState && (
-                  <p
-                    className={`status-message ${
-                      persistState.status === "success"
-                        ? "success"
-                        : persistState.status === "error"
-                          ? "error"
-                          : "pending"
-                    }`}
-                  >
-                    {persistState.message}
-                  </p>
-                )}
-              </article>
+              <DocumentCard
+                key={doc.file_path}
+                document={doc}
+                persistStatus={ps.status}
+                persistMessage={ps.message}
+                onPersist={() => handlePersist(doc)}
+              />
             );
           })}
         </div>
       </section>
-    </main>
+    </div>
   );
-=======
-			<div className="card-grid">
-				{items.map((item) => (
-					<div className="card" key={item.file_path}>
-						<h2>{item.file_name}</h2>
-						<p><strong>Typ:</strong> {item.extension}</p>
-						<p><strong>MIME:</strong> {item.mime_type}</p>
-						<p><strong>Parser:</strong> {item.parser_type}</p>
-						<p><strong>Status:</strong> {item.parse_status}</p>
-						<p><strong>Pfad:</strong> {item.file_path}</p>
-						<p><strong>Groesse:</strong> {item.size_bytes} Bytes</p>
-						<p><strong>Geaendert:</strong> {item.last_modified}</p>
-						<p><strong>Preview:</strong></p>
-						<div className="preview-box">{item.preview_text || "[leer]"}</div>
-						<button onClick={() => handlePersist(item)} className="action-button">
-							In Neo4j speichern
-						</button>
-					</div>
-				))}
-			</div>
-		</div>
-	);
->>>>>>> a19e3da ( Changes to be committed:)
 }

@@ -3,28 +3,18 @@ export type FolderScanRequest = {
 };
 
 export type DocumentItem = {
-<<<<<<< HEAD
   file_name: string;
   file_path: string;
   extension: string;
+  mime_type: string;
+  source_type: string;
+  parser_type: string;
+  preview_text: string;
   text_content: string;
   content_hash: string;
   last_modified: string;
   size_bytes: number;
-=======
-	file_name: string;
-	file_path: string;
-	extension: string;
-	mime_type: string;
-	source_type: string;
-	parser_type: string;
-	preview_text: string;
-	text_content: string;
-	content_hash: string;
-	last_modified: string;
-	size_bytes: number;
-	parse_status: string;
->>>>>>> a19e3da ( Changes to be committed:)
+  parse_status: string;
 };
 
 export type DocumentScanResponse = {
