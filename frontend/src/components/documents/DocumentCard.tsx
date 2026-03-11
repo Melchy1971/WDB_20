@@ -1,10 +1,10 @@
-import type { DocumentItem } from "../../types/document";
+import type { DocumentScanItem } from "../../types/document";
 import { PreviewBox } from "./PreviewBox";
 
 export type PersistStatus = "idle" | "saving" | "success" | "error";
 
 type Props = {
-  document: DocumentItem;
+  document: DocumentScanItem;
   persistStatus: PersistStatus;
   persistMessage: string;
   onPersist: () => void;

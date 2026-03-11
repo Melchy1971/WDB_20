@@ -1,9 +1,8 @@
-from datetime import datetime
-
-from pydantic import BaseModel, Field
+from pydantic import BaseModel
 
 
 class Document(BaseModel):
+    """Internes Modell mit vollem Textinhalt — wird nicht ans Frontend geliefert."""
     file_name: str
     file_path: str
     extension: str
@@ -13,24 +12,32 @@ class Document(BaseModel):
     preview_text: str
     text_content: str
     content_hash: str
-<<<<<<< HEAD
-    last_modified: datetime
-    size_bytes: int = Field(..., ge=0)
+    last_modified: str
+    size_bytes: int
+    parse_status: str
+
+
+class DocumentScanItem(BaseModel):
+    """Scan-Ergebnis für das Frontend — kein text_content."""
+    file_name: str
+    file_path: str
+    extension: str
+    mime_type: str
+    source_type: str
+    parser_type: str
+    preview_text: str
+    content_hash: str
+    last_modified: str
+    size_bytes: int
+    parse_status: str
 
 
 class DocumentScanResponse(BaseModel):
-    items: list[Document]
-=======
-    last_modified: str
-    size_bytes: int
-    parse_status: str
-
-
-class DocumentListResponse(BaseModel):
-    items: list[DocumentItem]
+    items: list[DocumentScanItem]
 
 
 class PersistDocumentRequest(BaseModel):
+    """Vollständiges Dokument für die Neo4j-Persistierung."""
     file_name: str
     file_path: str
     extension: str
@@ -43,7 +50,10 @@ class PersistDocumentRequest(BaseModel):
     last_modified: str
     size_bytes: int
     parse_status: str
->>>>>>> a19e3da ( Changes to be committed:)
+
+
+class PersistByHashRequest(BaseModel):
+    content_hash: str
 
 
 class PersistDocumentResponse(BaseModel):

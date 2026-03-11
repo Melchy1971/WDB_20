@@ -1,6 +1,8 @@
 import { apiPost } from "./client";
-import type { DocumentItem, PersistDocumentResponse } from "../types/document";
+import type { PersistDocumentCommand, PersistDocumentResponse } from "../types/document";
 
-export function persistDocument(document: DocumentItem): Promise<PersistDocumentResponse> {
-  return apiPost<DocumentItem, PersistDocumentResponse>("/persist/document", document);
+export function persistDocument(contentHash: string): Promise<PersistDocumentResponse> {
+  return apiPost<PersistDocumentCommand, PersistDocumentResponse>("/persist/document", {
+    content_hash: contentHash,
+  });
 }

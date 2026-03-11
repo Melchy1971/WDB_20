@@ -1,17 +1,17 @@
 import type { ReactNode } from "react";
 import { SidebarNav } from "./SidebarNav";
-import type { Page } from "../../types/document";
+import type { AppPage } from "../../types/navigation";
 
 type Props = {
-  currentPage: Page;
-  onNavigate: (page: Page) => void;
   children: ReactNode;
+  activePage: AppPage;
+  onNavigate: (page: AppPage) => void;
 };
 
-export function AppLayout({ currentPage, onNavigate, children }: Props) {
+export function AppLayout({ children, activePage, onNavigate }: Props) {
   return (
     <div className="app-layout">
-      <SidebarNav currentPage={currentPage} onNavigate={onNavigate} />
+      <SidebarNav activePage={activePage} onNavigate={onNavigate} />
       <main className="app-main">{children}</main>
     </div>
   );

@@ -1,15 +1,6 @@
-import { apiGet, apiPost } from "./client";
-import type { Source, CreateSourceRequest } from "../types/document";
-import type { DocumentScanResponse, FolderScanRequest } from "../types/document";
+import { apiPost } from "./client";
+import type { DocumentListResponse, FolderSourceRequest } from "../types/document";
 
-export function getSources(): Promise<Source[]> {
-  return apiGet<Source[]>("/sources");
-}
-
-export function createSource(body: CreateSourceRequest): Promise<Source> {
-  return apiPost<CreateSourceRequest, Source>("/sources", body);
-}
-
-export function scanFolder(request: FolderScanRequest): Promise<DocumentScanResponse> {
-  return apiPost<FolderScanRequest, DocumentScanResponse>("/sources/folder/scan", request);
+export function scanFolder(request: FolderSourceRequest): Promise<DocumentListResponse> {
+  return apiPost<FolderSourceRequest, DocumentListResponse>("/sources/folder/scan", request);
 }

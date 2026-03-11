@@ -30,62 +30,93 @@ body {
   overflow-y: auto;
 }
 
-/* ── Sidebar navigation ────────────────────────────────────── */
-.sidebar-nav {
+/* ── Sidebar shell ─────────────────────────────────────────── */
+.app-sidebar {
   width: 220px;
   flex-shrink: 0;
-  background: #1a2540;
-  color: #c8d3e8;
-  display: flex;
-  flex-direction: column;
-  padding: 0 0 2rem;
+  background: #ffffff;
+  border-right: 1px solid #d8deea;
+  padding: 1.5rem 1.25rem;
+  min-height: 100vh;
 }
 
-.sidebar-logo {
-  display: flex;
-  align-items: center;
-  gap: 0.6rem;
-  padding: 1.25rem 1.25rem 1.5rem;
+.app-sidebar__title {
+  margin: 0 0 1.5rem;
+  font-size: 1rem;
   font-weight: 700;
-  font-size: 0.95rem;
-  color: #fff;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  color: #111827;
 }
 
-.sidebar-logo__icon {
-  font-size: 1.2rem;
+/* ── Sidebar navigation ────────────────────────────────────── */
+.nav-section {
+  margin-top: 24px;
+}
+
+.nav-section-title {
+  font-size: 12px;
+  text-transform: uppercase;
+  color: #666;
+  margin-bottom: 8px;
+  letter-spacing: 0.04em;
 }
 
 .nav-list {
   list-style: none;
-  margin: 0.75rem 0 0;
   padding: 0;
+  margin: 0;
 }
 
-.nav-item {
+.nav-list li {
+  margin-bottom: 4px;
+}
+
+/* ── Nav buttons ───────────────────────────────────────────── */
+.nav-btn {
   display: block;
   width: 100%;
-  padding: 0.75rem 1.25rem;
+  text-align: left;
   background: none;
   border: none;
-  color: #c8d3e8;
+  border-radius: 6px;
+  padding: 6px 8px;
   font: inherit;
-  font-size: 0.9rem;
-  text-align: left;
+  font-size: 14px;
+  color: #1e3a6e;
   cursor: pointer;
-  transition: background 0.15s, color 0.15s;
+  transition: background 0.12s;
 }
 
-.nav-item:hover {
-  background: rgba(255, 255, 255, 0.06);
-  color: #fff;
+.nav-btn:hover {
+  background: #eef2fb;
 }
 
-.nav-item--active {
-  background: rgba(255, 255, 255, 0.1);
-  color: #fff;
+.nav-btn--active {
+  background: #dde6f8;
+  color: #1a3abf;
   font-weight: 600;
-  border-left: 3px solid #4f8ef7;
+}
+
+.nav-btn--muted {
+  color: #777;
+}
+
+.nav-btn--muted:hover {
+  background: #f4f5f7;
+}
+
+.nav-btn--muted.nav-btn--active {
+  background: #eaedf4;
+  color: #555;
+}
+
+/* ── Layout utilities ──────────────────────────────────────── */
+.stack-layout {
+  display: grid;
+  gap: 24px;
+}
+
+.page-section {
+  margin-top: 8px;
 }
 
 /* ── Page container ────────────────────────────────────────── */
@@ -170,16 +201,6 @@ body {
   background: #98abd9;
   border-color: #98abd9;
   cursor: not-allowed;
-}
-
-.action-button--danger {
-  background: #dc2626;
-  border-color: #dc2626;
-}
-
-.action-button--danger:hover:not(:disabled) {
-  background: #b91c1c;
-  border-color: #b91c1c;
 }
 
 /* ── Action bar ────────────────────────────────────────────── */
@@ -365,12 +386,6 @@ body {
   font-family: ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace;
   font-size: 0.8rem;
   border-radius: 6px;
-}
-
-/* ── Source form ───────────────────────────────────────────── */
-.source-form {
-  display: flex;
-  flex-direction: column;
 }
 
 /* ── Utility ───────────────────────────────────────────────── */

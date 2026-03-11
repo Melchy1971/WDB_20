@@ -1,10 +1,10 @@
 import { useMemo, useState } from "react";
 import { persistDocument } from "../api/persistApi";
 import { scanFolder } from "../api/sourcesApi";
-import { DocumentCard } from "../components/documents/DocumentCard";
+import { DocumentList } from "../components/documents/DocumentList";
 import { FolderScanForm } from "../components/sources/FolderScanForm";
 import { StatusBanner } from "../components/status/StatusBanner";
-import type { DocumentItem } from "../types/document";
+import type { DocumentScanItem } from "../types/document";
 import type { PersistStatus } from "../components/documents/DocumentCard";
 
 type PersistState = {
@@ -13,7 +13,7 @@ type PersistState = {
 };
 
 export function FolderScanPage() {
-  const [documents, setDocuments] = useState<DocumentItem[]>([]);
+  const [documents, setDocuments] = useState<DocumentScanItem[]>([]);
   const [isScanning, setIsScanning] = useState(false);
   const [scanError, setScanError] = useState<string | null>(null);
   const [persistStates, setPersistStates] = useState<Record<string, PersistState>>({});
@@ -32,34 +32,31 @@ export function FolderScanPage() {
       setDocuments(response.items);
     } catch (err) {
       setDocuments([]);
-      setScanError(
-        err instanceof Error ? err.message : "Unbekannter Fehler beim Scannen."
-      );
+      setScanError(err instanceof Error ? err.message : "Unbekannter Fehler beim Scannen.");
     } finally {
       setIsScanning(false);
     }
   }
 
-  async function handlePersist(document: DocumentItem): Promise<void> {
+  async function handlePersist(doc: DocumentScanItem): Promise<void> {
     setPersistStates((prev) => ({
       ...prev,
-      [document.file_path]: { status: "saving", message: "Speicherung läuft ..." },
+      [doc.file_path]: { status: "saving", message: "Speicherung läuft ..." },
     }));
     try {
-      const response = await persistDocument(document);
+      const response = await persistDocument(doc.content_hash);
       setPersistStates((prev) => ({
         ...prev,
-        [document.file_path]: {
+        [doc.file_path]: {
           status: "success",
           message: `Erfolgreich gespeichert: ${response.file_path}`,
         },
       }));
     } catch (err) {
-      const message =
-        err instanceof Error ? err.message : "Unbekannter Fehler beim Speichern.";
+      const message = err instanceof Error ? err.message : "Unbekannter Fehler beim Speichern.";
       setPersistStates((prev) => ({
         ...prev,
-        [document.file_path]: { status: "error", message },
+        [doc.file_path]: { status: "error", message },
       }));
     }
   }
@@ -71,34 +68,16 @@ export function FolderScanPage() {
       <FolderScanForm onScan={handleScan} isLoading={isScanning} />
 
       {scanError && (
-        <StatusBanner
-          message={scanError}
-          variant="error"
-          onDismiss={() => setScanError(null)}
-        />
+        <StatusBanner message={scanError} variant="error" onDismiss={() => setScanError(null)} />
       )}
       {scanSummary && <StatusBanner message={scanSummary} variant="success" />}
 
-      <section>
-        <h2>Gefundene Dokumente</h2>
-        {documents.length === 0 && !isScanning && (
-          <p className="hint">Noch keine Dateien geladen.</p>
-        )}
-        <div className="card-grid">
-          {documents.map((doc) => {
-            const ps = persistStates[doc.file_path] ?? { status: "idle", message: "" };
-            return (
-              <DocumentCard
-                key={doc.file_path}
-                document={doc}
-                persistStatus={ps.status}
-                persistMessage={ps.message}
-                onPersist={() => handlePersist(doc)}
-              />
-            );
-          })}
-        </div>
-      </section>
+      <DocumentList
+        documents={documents}
+        persistStates={persistStates}
+        onPersist={handlePersist}
+        isScanning={isScanning}
+      />
     </div>
   );
 }

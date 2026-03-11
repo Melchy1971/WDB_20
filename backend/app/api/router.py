@@ -5,6 +5,7 @@ from app.api.routes.persist import router as persist_router
 from app.api.routes.sources import router as sources_router
 
 api_router = APIRouter()
-api_router.include_router(health_router, tags=["system"])
-api_router.include_router(persist_router)
+
+api_router.include_router(health_router)
 api_router.include_router(sources_router)
+api_router.include_router(persist_router)

@@ -1,3 +1,4 @@
+// Einmaliger Ad-hoc-Scan eines lokalen Ordners ohne Quellenregistrierung.
 import { useState } from "react";
 
 type Props = {

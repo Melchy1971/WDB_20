@@ -1,18 +1,12 @@
-from neo4j.exceptions import Neo4jError
-
 from app.adapters.neo4j_adapter import Neo4jAdapter
-from app.models.document_models import Document
+from app.models.document_models import PersistDocumentRequest
 
 
 class PersistService:
-    @staticmethod
-    def persist_document(document: Document) -> None:
-        adapter = Neo4jAdapter()
+    def __init__(self) -> None:
+        self.neo4j = Neo4jAdapter()
 
-<<<<<<< HEAD
-        try:
-            adapter.upsert_document(
-=======
+    def persist_document(self, document: PersistDocumentRequest) -> None:
         query = """
         MERGE (d:Document {filePath: $file_path})
         SET d.fileName = $file_name,
@@ -27,31 +21,19 @@ class PersistService:
             d.sizeBytes = $size_bytes,
             d.parseStatus = $parse_status,
             d.createdAt = datetime()
-        RETURN d
+        RETURN d.filePath AS filePath
         """
-
-        with adapter._driver.session() as session:
-            session.run(
-                query,
->>>>>>> a19e3da ( Changes to be committed:)
-                file_path=document.file_path,
-                file_name=document.file_name,
-                extension=document.extension,
-                mime_type=document.mime_type,
-                source_type=document.source_type,
-                parser_type=document.parser_type,
-                preview_text=document.preview_text,
-                text_content=document.text_content,
-                content_hash=document.content_hash,
-                last_modified=document.last_modified.isoformat(),
-                size_bytes=document.size_bytes,
-<<<<<<< HEAD
-            )
-        except Neo4jError as exc:
-            raise RuntimeError("Neo4j persistence failed") from exc
-        finally:
-            adapter.close()
-=======
-                parse_status=document.parse_status,
-            ).single()
->>>>>>> a19e3da ( Changes to be committed:)
+        self.neo4j.execute_write(query, {
+            "file_path": document.file_path,
+            "file_name": document.file_name,
+            "extension": document.extension,
+            "mime_type": document.mime_type,
+            "source_type": document.source_type,
+            "parser_type": document.parser_type,
+            "preview_text": document.preview_text,
+            "text_content": document.text_content,
+            "content_hash": document.content_hash,
+            "last_modified": document.last_modified,
+            "size_bytes": document.size_bytes,
+            "parse_status": document.parse_status,
+        })
