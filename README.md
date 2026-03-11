@@ -2,7 +2,7 @@
 
 Lokales Full-Stack-System zur Extraktion und Speicherung von Wissen aus E-Mails und Dokumenten.
 
-**Stack:** React 18 + TypeScript + Vite · FastAPI · Neo4j · Ollama
+**Stack:** React 18 + TypeScript + Vite · FastAPI · Neo4j · Ollama / DNAbot
 
 ---
 
@@ -11,27 +11,30 @@ Lokales Full-Stack-System zur Extraktion und Speicherung von Wissen aus E-Mails 
 ```
 WDB_20-1/
 ├── backend/                  # FastAPI-Backend
-│   ├── main.py               # App-Einstiegspunkt + uvicorn
+│   ├── main.py               # App-Einstiegspunkt + CORS + uvicorn
 │   ├── requirements.txt
 │   ├── .env / .env.example
 │   └── app/
-│       ├── adapters/         # Neo4j, Ollama
+│       ├── adapters/         # neo4j_adapter, ollama_adapter
 │       ├── api/
-│       │   ├── router.py
+│       │   ├── router.py     # zentrale Router-Aggregation
 │       │   └── routes/       # health, sources, persist
-│       ├── core/             # Konfiguration
-│       ├── models/           # Pydantic-Modelle
-│       └── services/         # FileService, PersistService, DocumentParserService
+│       ├── core/             # config (pydantic-settings)
+│       ├── models/           # document_models, system_models, source_models
+│       └── services/         # FileService, PersistService,
+│                             # DocumentParserService, scan_store
 ├── frontend/                 # React-Frontend
-│   ├── src/
-│   │   ├── api/              # client, sourcesApi, persistApi, systemApi
-│   │   ├── components/
-│   │   │   ├── documents/    # DocumentCard, PreviewBox
-│   │   │   ├── layout/       # AppLayout, SidebarNav
-│   │   │   ├── sources/      # FolderScanForm
-│   │   │   └── status/       # StatusCard, StatusBanner
-│   │   ├── pages/            # SystemStatusPage, SourcesPage, FolderScanPage
-│   │   └── types/            # document.ts, system.ts
+│   └── src/
+│       ├── api/              # client, sourcesApi, persistApi,
+│       │   │                 # systemApi, topicsApi (stub), aiSettingsApi (stub)
+│       ├── components/
+│       │   ├── documents/    # DocumentCard, DocumentList, PreviewBox
+│       │   ├── layout/       # AppLayout, SidebarNav
+│       │   └── status/       # StatusCard, StatusBanner
+│       ├── pages/            # SystemStatusPage, SourcesPage, FolderScanPage,
+│       │   │                 # KiSettingsPage, TopicsReviewPage (stub),
+│       │   │                 # PstImportPage (stub), AnalysisPage (stub)
+│       └── types/            # document.ts, system.ts, navigation.ts, ai.ts
 ├── data/sample_docs/         # Testdokumente (.txt, .eml)
 ├── docs/                     # Architektur- und Setup-Dokumentation
 ├── scripts/                  # Start- und Setup-Skripte
@@ -45,7 +48,7 @@ WDB_20-1/
 - Python 3.11+
 - Node.js 18+
 - Neo4j (lokal oder Aura)
-- Ollama (lokal, `http://localhost:11434`)
+- Ollama (lokal, `http://localhost:11434`) **oder** DNAbot
 
 ---
 
@@ -81,7 +84,6 @@ OLLAMA_MODEL=llama3.1
 ```bash
 cd frontend
 npm install
-cp .env.example .env
 ```
 
 ---
@@ -105,17 +107,68 @@ Oder per Skript:
 
 ---
 
-## API-Endpoints
+## Navigation
+
+Die Sidebar-Navigation schaltet zwischen Seiten per lokalem App-State (kein react-router-dom).
+
+| Seite | Status | Beschreibung |
+|---|---|---|
+| System Status | ✅ aktiv | API-, Neo4j- und Ollama-Verbindungsstatus |
+| Dokumentscan | ✅ aktiv | Ordner scannen, Dokumente in Neo4j speichern |
+| KI-Einstellungen | ✅ aktiv | Provider-Auswahl: Local Ollama / DNAbot |
+| Quellenverwaltung | ⏳ Backend ausstehend | Ordnerpfad festlegen, zu Scan weiterleiten |
+| Themenreview | ⏳ geplant | — |
+| PST-Import | ⏳ geplant | — |
+| KI-Analyse | ⏳ geplant | — |
+
+---
+
+## API-Endpunkte (Backend)
 
 | Methode | Pfad | Beschreibung |
 |---------|------|--------------|
 | `GET` | `/health` | Systemstatus (API, Neo4j, Ollama) |
 | `POST` | `/sources/folder/scan` | Ordner scannen → Dokumente parsen |
-| `POST` | `/persist/document` | Dokument in Neo4j speichern |
+| `POST` | `/persist/document` | Dokument per content_hash in Neo4j speichern |
 
 ### Unterstützte Dateiformate
 
 `.txt` · `.pdf` · `.docx` · `.eml`
+
+### Sicherheitskonzept
+
+- `text_content` wird nie ans Frontend geliefert (nur `preview_text`)
+- Persistierung erfolgt ID-basiert (`content_hash`), kein Volltext über die API
+- Dateigröße begrenzt auf 10 MB pro Datei
+- Parse-Fehler pro Datei isoliert (kein Abbruch des gesamten Scans)
+
+---
+
+## Frontend-Architektur
+
+### State-Management
+
+| State | Ort | Beschreibung |
+|---|---|---|
+| `activePage` | `App.tsx` | aktive Seite (Union-Type `AppPage`) |
+| `selectedFolderPath` | `App.tsx` | gemeinsamer Pfad für Quellenverwaltung und Dokumentscan |
+| `activeProvider` | `App.tsx` | KI-Provider (`"ollama"` \| `"dnabot"`) |
+
+### Typen
+
+| Datei | Inhalt |
+|---|---|
+| `types/document.ts` | `DocumentScanItem`, `DocumentListResponse`, `FolderSourceRequest`, `PersistDocumentCommand`, `PersistDocumentResponse` |
+| `types/navigation.ts` | `AppPage` Union-Type |
+| `types/ai.ts` | `AiProvider` (inkl. `"none"`), `ActiveAiProvider` |
+| `types/system.ts` | `HealthResponse` |
+
+### API-Stubs (noch ohne Backend)
+
+| Datei | Geplante Endpunkte |
+|---|---|
+| `api/topicsApi.ts` | `GET/POST /topics` |
+| `api/aiSettingsApi.ts` | `GET/POST /settings/ai-provider` |
 
 ---
 
@@ -124,10 +177,13 @@ Oder per Skript:
 | Feature | Status |
 |---------|--------|
 | System Health Check | ✅ fertig |
-| Ordner scannen & parsen | ✅ fertig |
-| Dokument in Neo4j speichern | ✅ fertig |
-| Quellenverwaltung (CRUD) | ⏳ Backend ausstehend |
+| Ordner scannen & parsen (.txt, .pdf, .docx, .eml) | ✅ fertig |
+| Dokument in Neo4j speichern (ID-basiert) | ✅ fertig |
+| KI-Provider-Auswahl (Ollama / DNAbot) | ✅ Frontend fertig, Backend ausstehend |
+| Quellenverwaltung (Pfad setzen, zu Scan weiterleiten) | ✅ Frontend fertig, Backend ausstehend |
 | Themenextraktion (NLP) | ⏳ geplant |
+| PST-Import | ⏳ geplant |
+| KI-Analyse | ⏳ geplant |
 
 ---
 

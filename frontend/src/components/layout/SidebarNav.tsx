@@ -13,6 +13,7 @@ type NavItem = {
 const ACTIVE_ITEMS: NavItem[] = [
   { page: "system-status", label: "System Status" },
   { page: "folder-scan",   label: "Dokumentscan" },
+  { page: "ki-settings",   label: "KI-Einstellungen" },
 ];
 
 const FUTURE_ITEMS: NavItem[] = [
