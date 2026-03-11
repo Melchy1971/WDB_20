@@ -1,0 +1,30 @@
+from pathlib import Path
+
+from pydantic import Field
+from pydantic_settings import BaseSettings, SettingsConfigDict
+
+
+BASE_DIR = Path(__file__).resolve().parents[2]
+ENV_FILE = BASE_DIR / ".env"
+
+
+class Settings(BaseSettings):
+    app_env: str = "local"
+    api_host: str = "127.0.0.1"
+    api_port: int = 8000
+
+    neo4j_uri: str = Field(default="neo4j://your-neo4j-host:7687")
+    neo4j_user: str = Field(default="neo4j")
+    neo4j_password: str = Field(default="change_me")
+
+    ollama_base_url: str = "http://localhost:11434"
+    ollama_model: str = "llama3.1"
+
+    model_config = SettingsConfigDict(
+        env_file=ENV_FILE,
+        env_file_encoding="utf-8",
+        extra="ignore",
+    )
+
+
+settings = Settings()

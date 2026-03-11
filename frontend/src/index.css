@@ -1,0 +1,126 @@
+:root {
+  font-family: Inter, Arial, sans-serif;
+  color: #162033;
+  background-color: #f3f5f8;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+}
+
+#root {
+  min-height: 100vh;
+}
+
+.page {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 32px 20px 40px;
+}
+
+.panel {
+  background: #ffffff;
+  border: 1px solid #d8deea;
+  border-radius: 12px;
+  padding: 18px;
+  margin-bottom: 28px;
+}
+
+.label {
+  display: block;
+  margin-bottom: 8px;
+  font-weight: 600;
+}
+
+.text-input {
+  width: 100%;
+  min-height: 40px;
+  border: 1px solid #bcc5d6;
+  border-radius: 8px;
+  padding: 10px 12px;
+  margin-bottom: 12px;
+  font: inherit;
+}
+
+.action-button {
+  min-height: 40px;
+  border: 1px solid #2a5bd7;
+  background: #2a5bd7;
+  color: #fff;
+  border-radius: 8px;
+  padding: 8px 14px;
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.action-button:disabled {
+  background: #98abd9;
+  border-color: #98abd9;
+  cursor: not-allowed;
+}
+
+.hint {
+  color: #49566f;
+  margin-top: 10px;
+}
+
+.card-grid {
+  display: grid;
+<<<<<<< HEAD
+  grid-template-columns: repeat(auto-fit, minmax(290px, 1fr));
+=======
+  grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
+>>>>>>> a19e3da ( Changes to be committed:)
+  gap: 16px;
+}
+
+.card {
+  background: #ffffff;
+  border: 1px solid #d8deea;
+  border-radius: 12px;
+  padding: 16px;
+}
+
+.card h3 {
+  margin-top: 0;
+}
+
+.card p {
+  overflow-wrap: anywhere;
+}
+
+.status-message {
+  margin-top: 12px;
+  font-size: 14px;
+  padding: 8px 10px;
+  border-radius: 8px;
+}
+
+.pending {
+  color: #5e4b00;
+  background: #fff6d8;
+}
+
+.success {
+  color: #104f2d;
+  background: #daf5e4;
+}
+
+.error {
+  color: #7a1022;
+  background: #fbe0e6;
+}
+
+.preview-box {
+  border: 1px solid #d9dee3;
+  background: #fafbfc;
+  padding: 10px;
+  min-height: 80px;
+  white-space: pre-wrap;
+  margin-bottom: 12px;
+}
