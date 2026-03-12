@@ -17,10 +17,12 @@ const ACTIVE_ITEMS: NavItem[] = [
 ];
 
 const FUTURE_ITEMS: NavItem[] = [
-  { page: "sources",       label: "Quellenverwaltung" },
-  { page: "topics-review", label: "Themenreview" },
-  { page: "pst-import",    label: "PST-Import" },
-  { page: "analysis",      label: "KI-Analyse" },
+  { page: "sources",             label: "Quellenverwaltung" },
+  { page: "pst-tree",            label: "PST-Struktur" },
+  { page: "pst-import-preview",  label: "PST-Import-Vorschau" },
+  { page: "topics-review",       label: "Themenreview" },
+  { page: "pst-import",          label: "PST-Import" },
+  { page: "analysis",            label: "KI-Analyse" },
 ];
 
 export function SidebarNav({ activePage, onNavigate }: Props) {

@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
-import { createSource, listSources } from "../api/sourcesApi";
+import { createPstSource, createSource, listSources } from "../api/sourcesApi";
 import { StatusBanner } from "../components/status/StatusBanner";
-import type { Source } from "../types/source";
+import type { Source, SourceType } from "../types/source";
 
 type LoadState = "loading" | "ready" | "error";
 type CreateState = "idle" | "saving" | "error";
@@ -12,13 +12,30 @@ type Props = {
   onContinueToScan: () => void;
 };
 
+const SOURCE_TYPE_LABELS: Record<SourceType, string> = {
+  LOCAL_FOLDER: "Lokaler Ordner",
+  PST: "PST-Datei",
+};
+
+const PATH_LABELS: Record<SourceType, { label: string; placeholder: string }> = {
+  LOCAL_FOLDER: {
+    label: "Ordnerpfad",
+    placeholder: "z. B. /workspace/data/sample_docs",
+  },
+  PST: {
+    label: "PST-Dateipfad",
+    placeholder: "z. B. /data/archive/postfach.pst",
+  },
+};
+
 export function SourcesPage({ selectedSourceId, onSelectSource, onContinueToScan }: Props) {
   const [sources, setSources] = useState<Source[]>([]);
   const [loadState, setLoadState] = useState<LoadState>("loading");
   const [loadError, setLoadError] = useState<string | null>(null);
 
+  const [sourceType, setSourceType] = useState<SourceType>("LOCAL_FOLDER");
   const [label, setLabel] = useState("");
-  const [sourcePath, setSourcePath] = useState("");
+  const [path, setPath] = useState("");
   const [createState, setCreateState] = useState<CreateState>("idle");
   const [createError, setCreateError] = useState<string | null>(null);
 
@@ -34,19 +51,30 @@ export function SourcesPage({ selectedSourceId, onSelectSource, onContinueToScan
       });
   }, []);
 
+  function handleTypeChange(newType: SourceType): void {
+    setSourceType(newType);
+    setPath("");
+    setCreateError(null);
+  }
+
   async function handleCreate(e: React.FormEvent): Promise<void> {
     e.preventDefault();
     setCreateState("saving");
     setCreateError(null);
     try {
-      const newSource = await createSource({
-        source_type: "LOCAL_FOLDER",
-        label: label.trim(),
-        source_path: sourcePath.trim(),
-      });
+      let newSource: Source;
+      if (sourceType === "PST") {
+        newSource = await createPstSource({ label: label.trim(), pst_file_path: path.trim() });
+      } else {
+        newSource = await createSource({
+          source_type: "LOCAL_FOLDER",
+          label: label.trim(),
+          source_path: path.trim(),
+        });
+      }
       setSources((prev) => [...prev, newSource]);
       setLabel("");
-      setSourcePath("");
+      setPath("");
       setCreateState("idle");
     } catch (err) {
       setCreateError(err instanceof Error ? err.message : "Fehler beim Anlegen der Quelle.");
@@ -54,12 +82,31 @@ export function SourcesPage({ selectedSourceId, onSelectSource, onContinueToScan
     }
   }
 
+  const pathMeta = PATH_LABELS[sourceType];
+
   return (
     <div className="page">
       <h1>Quellenverwaltung</h1>
 
       <form className="panel" onSubmit={handleCreate}>
         <h2>Neue Quelle anlegen</h2>
+
+        <label className="label" htmlFor="source-type">
+          Quellentyp
+        </label>
+        <select
+          id="source-type"
+          className="text-input"
+          value={sourceType}
+          onChange={(e) => handleTypeChange(e.target.value as SourceType)}
+        >
+          {(Object.keys(SOURCE_TYPE_LABELS) as SourceType[]).map((type) => (
+            <option key={type} value={type}>
+              {SOURCE_TYPE_LABELS[type]}
+            </option>
+          ))}
+        </select>
+
         <label className="label" htmlFor="source-label">
           Name
         </label>
@@ -72,25 +119,27 @@ export function SourcesPage({ selectedSourceId, onSelectSource, onContinueToScan
           placeholder="z. B. Projektdokumente 2024"
           required
         />
+
         <label className="label" htmlFor="source-path">
-          Ordnerpfad
+          {pathMeta.label}
         </label>
         <input
           id="source-path"
           className="text-input"
           type="text"
-          value={sourcePath}
-          onChange={(e) => setSourcePath(e.target.value)}
-          placeholder="z. B. /workspace/data/sample_docs"
+          value={path}
+          onChange={(e) => setPath(e.target.value)}
+          placeholder={pathMeta.placeholder}
           required
         />
+
         {createError && (
           <p className="status-message error">{createError}</p>
         )}
         <button
           type="submit"
           className="action-button"
-          disabled={createState === "saving" || !label.trim() || !sourcePath.trim()}
+          disabled={createState === "saving" || !label.trim() || !path.trim()}
         >
           {createState === "saving" ? "Speichern ..." : "Quelle anlegen"}
         </button>
@@ -121,7 +170,9 @@ export function SourcesPage({ selectedSourceId, onSelectSource, onContinueToScan
                     <div className="source-item__info">
                       <span className="source-item__label">{source.label}</span>
                       <span className="source-item__path">{source.source_path}</span>
-                      <span className="source-item__type">{source.source_type}</span>
+                      <span className="source-item__type">
+                        {SOURCE_TYPE_LABELS[source.source_type]}
+                      </span>
                     </div>
                     <div className="source-item__actions">
                       <button

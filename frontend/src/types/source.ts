@@ -9,11 +9,17 @@ export type Source = {
   created_at: string;
 };
 
-/** POST /sources — Request-Body */
+/** POST /sources — LOCAL_FOLDER */
 export type CreateSourceRequest = {
   source_type: SourceType;
   label: string;
   source_path: string;
+};
+
+/** POST /sources/pst — PST */
+export type CreatePstSourceRequest = {
+  label: string;
+  pst_file_path: string;
 };
 
 /** GET /sources — Response */

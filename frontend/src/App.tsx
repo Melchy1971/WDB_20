@@ -5,6 +5,8 @@ import { FolderScanPage } from "./pages/FolderScanPage";
 import { SourcesPage } from "./pages/SourcesPage";
 import { TopicsReviewPage } from "./pages/TopicsReviewPage";
 import { PstImportPage } from "./pages/PstImportPage";
+import { PstTreePage } from "./pages/PstTreePage";
+import { PstImportPreviewPage } from "./pages/PstImportPreviewPage";
 import { AnalysisPage } from "./pages/AnalysisPage";
 import { KiSettingsPage } from "./pages/KiSettingsPage";
 import type { AppPage } from "./types/navigation";
@@ -32,6 +34,10 @@ function App() {
         return <TopicsReviewPage />;
       case "pst-import":
         return <PstImportPage />;
+      case "pst-tree":
+        return <PstTreePage selectedSourceId={selectedSourceId} />;
+      case "pst-import-preview":
+        return <PstImportPreviewPage selectedSourceId={selectedSourceId} />;
       case "analysis":
         return <AnalysisPage />;
       case "ki-settings":

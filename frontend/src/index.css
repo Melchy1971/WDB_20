@@ -584,6 +584,129 @@ body {
   flex-shrink: 0;
 }
 
+/* ── Panel actions bar ─────────────────────────────────────── */
+.panel-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1rem;
+}
+
+/* ── PST Tree ──────────────────────────────────────────────── */
+.tree-root {
+  font-size: var(--tk-font-size-base);
+  line-height: 1.6;
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+.tree-node {
+  display: flex;
+  flex-direction: column;
+}
+
+.tree-node > .tree-node {
+  border-left: 1px solid var(--tk-border);
+  margin-left: 1.25rem;
+}
+
+.tree-node__row {
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+  padding: 0.125rem 0.25rem;
+  border-radius: var(--tk-radius-sm);
+}
+
+.tree-node__row--selected {
+  background: var(--tk-accent-subtle);
+}
+
+.tree-node__checkbox {
+  flex-shrink: 0;
+  width: 15px;
+  height: 15px;
+  cursor: pointer;
+  accent-color: var(--tk-accent);
+  -webkit-user-select: auto;
+  user-select: auto;
+}
+
+.tree-node__icon {
+  display: inline-block;
+  width: 1.25rem;
+  flex-shrink: 0;
+  color: var(--tk-text-muted);
+  font-size: var(--tk-font-size-sm);
+}
+
+.tree-node__name {
+  color: var(--tk-text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.tree-node__count {
+  margin-left: 0.25rem;
+  font-size: var(--tk-font-size-sm);
+  color: var(--tk-text-muted);
+  background: var(--tk-surface-subtle);
+  border: 1px solid var(--tk-border);
+  border-radius: var(--tk-radius-full);
+  padding: 0 0.4rem;
+  line-height: 1.4;
+  flex-shrink: 0;
+}
+
+/* ── Import Preview ────────────────────────────────────────── */
+.preview-summary {
+  font-size: var(--tk-font-size-base);
+  color: var(--tk-text-primary);
+  margin-bottom: 0.75rem;
+}
+
+.preview-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.preview-item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.375rem 0.5rem;
+  border-radius: var(--tk-radius-sm);
+  background: var(--tk-surface-subtle);
+}
+
+.preview-item__icon {
+  flex-shrink: 0;
+  width: 1.25rem;
+  color: var(--tk-text-muted);
+  font-size: var(--tk-font-size-sm);
+}
+
+.preview-item__name {
+  flex: 1;
+  color: var(--tk-text-primary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.preview-item__type {
+  flex-shrink: 0;
+  font-size: var(--tk-font-size-sm);
+  color: var(--tk-text-muted);
+  background: var(--tk-surface);
+  border: 1px solid var(--tk-border);
+  border-radius: var(--tk-radius-full);
+  padding: 0 0.4rem;
+  line-height: 1.6;
+}
+
 /* ── Utility ───────────────────────────────────────────────── */
 .hint {
   color: var(--tk-text-hint);

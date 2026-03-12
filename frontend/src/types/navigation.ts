@@ -4,5 +4,7 @@ export type AppPage =
   | "sources"
   | "topics-review"
   | "pst-import"
+  | "pst-tree"
+  | "pst-import-preview"
   | "analysis"
   | "ki-settings";
