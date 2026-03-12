@@ -17,7 +17,7 @@ from app.models.selection_models import (
 from app.models.import_models import ImportPreviewResponse
 from app.models.tree_models import SourceTreeResponse
 from app.services import import_preview_service
-from app.services import pst_tree_service
+from app.services import pst_parser_service
 from app.services import source_registry_service
 from app.services import source_selection_service
 from app.services.file_service import FileService
@@ -68,7 +68,23 @@ def get_source_tree(source_id: str) -> SourceTreeResponse:
                 f"(Quellentyp dieser Quelle: {source.source_type})."
             ),
         )
-    return pst_tree_service.get_pst_tree(source_id)
+    try:
+        return pst_parser_service.parse_pst_tree(
+            pst_path=source.source_path,
+            source_id=source_id,
+        )
+    except ImportError as exc:
+        raise HTTPException(
+            status_code=503,
+            detail=f"PST-Parser nicht verfügbar: {exc}",
+        ) from exc
+    except FileNotFoundError as exc:
+        raise HTTPException(status_code=422, detail=str(exc)) from exc
+    except OSError as exc:
+        raise HTTPException(
+            status_code=422,
+            detail=f"PST-Datei konnte nicht gelesen werden: {exc}",
+        ) from exc
 
 
 @router.get("/{source_id}/selection", response_model=SourceSelectionResponse)
@@ -107,7 +123,23 @@ def get_import_preview(source_id: str) -> ImportPreviewResponse:
             ),
         )
     selected_node_ids = source_selection_service.get_selection(source_id)
-    tree = pst_tree_service.get_pst_tree(source_id)
+    try:
+        tree = pst_parser_service.parse_pst_tree(
+            pst_path=source.source_path,
+            source_id=source_id,
+        )
+    except ImportError as exc:
+        raise HTTPException(
+            status_code=503,
+            detail=f"PST-Parser nicht verfügbar: {exc}",
+        ) from exc
+    except FileNotFoundError as exc:
+        raise HTTPException(status_code=422, detail=str(exc)) from exc
+    except OSError as exc:
+        raise HTTPException(
+            status_code=422,
+            detail=f"PST-Datei konnte nicht gelesen werden: {exc}",
+        ) from exc
     return import_preview_service.get_import_preview(source, selected_node_ids, tree.root)
 
 

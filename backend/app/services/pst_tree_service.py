@@ -1,54 +1,48 @@
 """
-pst_tree_service — Platzhalter für die spätere PST-Baum-Analyse.
+pst_tree_service — Delegiert an pst_parser_service (pypff-basierter Parser).
 
-Aktueller Stand:
-  Gibt eine statische Platzhalter-Struktur zurück, die den API-Vertrag
-  für GET /sources/{source_id}/tree erfüllt.
-  Keine Datei wird gelesen, kein PST-Parser wird aufgerufen.
-
-Erweiterungspunkt:
-  Wenn ein echter PST-Parser (z. B. libpff-python) verfügbar ist,
-  ersetzt man den Rumpf von `get_pst_tree()` durch einen echten
-  Traversal-Aufruf. Der Endpunkt und die Modelle bleiben unverändert.
+Dieser Service ist die Brücke zwischen dem HTTP-Layer (sources.py-Route)
+und dem eigentlichen Parser. Er löst die Source-Path über die Registry auf
+und leitet den Aufruf weiter.
 """
 
-from app.models.tree_models import SourceTreeResponse, TreeNode
+from fastapi import HTTPException
 
-_PLACEHOLDER_FOLDERS: list[tuple[str, str]] = [
-    ("inbox",    "Posteingang"),
-    ("sent",     "Gesendete Objekte"),
-    ("deleted",  "Gelöschte Elemente"),
-    ("calendar", "Kalender"),
-    ("contacts", "Kontakte"),
-    ("drafts",   "Entwürfe"),
-]
+from app.models.tree_models import SourceTreeResponse
+from app.services import source_registry_service
+from app.services import pst_parser_service
 
 
 def get_pst_tree(source_id: str) -> SourceTreeResponse:
     """
-    Gibt eine Platzhalter-Baumstruktur für die angegebene PST-Quelle zurück.
+    Lädt den Ordnerbaum der PST-Datei, die der Source *source_id* zugeordnet ist.
 
-    - Alle Ordner sind leer (item_count=0, children=[]).
-    - Keine Nachrichten, keine Anhänge — kein Fake-Inhalt.
-    - Struktur entspricht dem Standard-Ordnerlayout einer PST-Datei.
+    Raises:
+        HTTPException 404 — Source nicht gefunden.
+        HTTPException 422 — PST-Datei nicht gefunden oder nicht lesbar.
+        HTTPException 503 — pypff nicht installiert.
     """
-    folders = [
-        TreeNode(
-            id=folder_id,
-            name=label,
-            node_type="folder",
-            item_count=0,
-            children=[],
+    source = source_registry_service.get_source(source_id)
+    if source is None:
+        raise HTTPException(status_code=404, detail=f"Quelle nicht gefunden: {source_id}")
+
+    try:
+        return pst_parser_service.parse_pst_tree(
+            pst_path=source.source_path,
+            source_id=source_id,
         )
-        for folder_id, label in _PLACEHOLDER_FOLDERS
-    ]
-
-    root = TreeNode(
-        id="root",
-        name="Postfach (Platzhalter)",
-        node_type="folder",
-        item_count=len(folders),
-        children=folders,
-    )
-
-    return SourceTreeResponse(source_id=source_id, root=root)
+    except ImportError as exc:
+        raise HTTPException(
+            status_code=503,
+            detail=f"PST-Parser nicht verfügbar: {exc}",
+        ) from exc
+    except FileNotFoundError as exc:
+        raise HTTPException(
+            status_code=422,
+            detail=str(exc),
+        ) from exc
+    except OSError as exc:
+        raise HTTPException(
+            status_code=422,
+            detail=f"PST-Datei konnte nicht gelesen werden: {exc}",
+        ) from exc
