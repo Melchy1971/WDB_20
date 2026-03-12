@@ -707,6 +707,14 @@ body {
   line-height: 1.6;
 }
 
+/* ── Job-Status-Badge ─────────────────────────────────────── */
+.job-status-badge {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: var(--tk-radius-sm);
+  font-size: var(--tk-font-size-sm);
+}
+
 /* ── Utility ───────────────────────────────────────────────── */
 .hint {
   color: var(--tk-text-hint);

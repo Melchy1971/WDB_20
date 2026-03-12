@@ -99,8 +99,7 @@ export function KiSettingsPage() {
 
                   <button
                     type="button"
-                    role="switch"
-                    aria-checked={isActive ? "true" : "false"}
+                    aria-pressed={isActive}
                     aria-label={`${label} ${isActive ? "deaktivieren nicht möglich" : "aktivieren"}`}
                     className={`toggle-switch${isActive ? " toggle-switch--on" : ""}`}
                     onClick={() => handleProviderChange(id)}
