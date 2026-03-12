@@ -27,3 +27,9 @@ export function apiPost<TBody, TResponse>(path: string, body: TBody): Promise<TR
     body: JSON.stringify(body),
   }).then((res) => handleResponse<TResponse>(res, `POST ${path}`));
 }
+
+export function apiDelete<T>(path: string): Promise<T> {
+  return fetch(`${API_BASE_URL}${path}`, { method: "DELETE" }).then((res) =>
+    handleResponse<T>(res, `DELETE ${path}`)
+  );
+}

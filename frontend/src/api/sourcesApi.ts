@@ -1,4 +1,4 @@
-import { apiGet, apiPost } from "./client";
+import { apiDelete, apiGet, apiPost } from "./client";
 import type { DocumentScanResponse } from "../types/document";
 import type {
   CreatePstSourceRequest,
@@ -26,4 +26,8 @@ export function scanSource(sourceId: string): Promise<DocumentScanResponse> {
 
 export function fetchSourceTree(sourceId: string): Promise<SourceTreeResponse> {
   return apiGet<SourceTreeResponse>(`/sources/${sourceId}/tree`);
+}
+
+export function deleteSource(sourceId: string): Promise<Source> {
+  return apiDelete<Source>(`/sources/${sourceId}`);
 }

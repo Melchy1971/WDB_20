@@ -60,6 +60,16 @@ def create_pst_source(request: CreatePstSourceRequest) -> Source:
     return source_registry_service.create_pst_source(request)
 
 
+# Quelle entfernen
+@router.delete("/{source_id}", response_model=Source)
+def delete_source(source_id: str) -> Source:
+    source = source_registry_service.get_source(source_id)
+    if source is None:
+        raise HTTPException(status_code=404, detail=f"Quelle nicht gefunden: {source_id}")
+    source_registry_service.delete_source(source_id)
+    return source
+
+
 @router.post("/select", response_model=SelectSourceResponse)
 def select_source(request: SelectSourceRequest) -> SelectSourceResponse:
     try:

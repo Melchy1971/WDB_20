@@ -47,6 +47,11 @@ class _SourceRegistry:
     def get_selected_source_id(self) -> str | None:
         return self._selected_source_id
 
+    def delete_source(self, source_id: str) -> None:
+        self._sources.pop(source_id, None)
+        if self._selected_source_id == source_id:
+            self._selected_source_id = None
+
 
 _registry = _SourceRegistry()
 
@@ -73,3 +78,6 @@ def select_source(source_id: str) -> Source:
 
 def get_selected_source_id() -> str | None:
     return _registry.get_selected_source_id()
+
+def delete_source(source_id: str) -> None:
+    _registry.delete_source(source_id)

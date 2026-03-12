@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { createPstSource, createSource, listSources } from "../api/sourcesApi";
+import { createPstSource, createSource, listSources, deleteSource } from "../api/sourcesApi";
 import { StatusBanner } from "../components/status/StatusBanner";
 import type { Source, SourceType } from "../types/source";
 
@@ -372,6 +372,20 @@ export function SourcesPage({ selectedSourceId, onSelectSource, onContinueToScan
                       >
                         {isActive ? "Zum Scan" : "Aktivieren + Scan"}
                       </button>
+                        <button
+                          type="button"
+                          className="action-button action-button--danger"
+                          onClick={async () => {
+                            try {
+                              await deleteSource(source.source_id);
+                              setSources((prev) => prev.filter((s) => s.source_id !== source.source_id));
+                            } catch (err) {
+                              alert("Quelle konnte nicht entfernt werden.");
+                            }
+                          }}
+                        >
+                          Entfernen
+                        </button>
                     </div>
                   </div>
                 );
