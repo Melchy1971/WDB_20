@@ -38,7 +38,7 @@ WDB_20-1/
 ├── data/sample_docs/         # Testdokumente (.txt, .eml)
 ├── docs/                     # Architektur- und Setup-Dokumentation
 ├── scripts/                  # Start- und Setup-Skripte
-└── tests/                    # Platzhalter für Integrationstests
+└── sample_docs/              # zusätzliche Beispieldokumente
 ```
 
 ---
@@ -105,6 +105,24 @@ Oder per Skript:
 .\scripts\start_frontend.ps1
 ```
 
+### Schnellstart (Windows / PowerShell)
+
+```powershell
+# im Projektroot
+Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass
+
+# Terminal 1: Backend
+.\scripts\start_backend.ps1
+
+# Terminal 2: Frontend
+.\scripts\start_frontend.ps1
+```
+
+### Troubleshooting (kurz)
+
+- Fehler `Virtuelle Umgebung nicht gefunden`: im Ordner `backend` zuerst `python -m venv .venv` und danach `pip install -r requirements.txt` ausführen.
+- Fehler bei `npm run dev` (z. B. fehlende Pakete): im Ordner `frontend` einmal `npm install` ausführen.
+
 ---
 
 ## Navigation
@@ -145,6 +163,13 @@ Die Sidebar-Navigation schaltet zwischen Seiten per lokalem App-State (kein reac
 ---
 
 ## Frontend-Architektur
+
+### UI-Styleguide (Design Tokens)
+
+- Alle visuellen Zustände laufen zentral über `frontend/src/styles/theme.css` und `frontend/src/index.css`.
+- In `frontend/src/components/**` und `frontend/src/pages/**` werden keine harten Farbwerte verwendet.
+- Komponenten nutzen ausschließlich semantische Klassen; Farb- und State-Definitionen erfolgen über CSS-Tokens (`var(--tk-...)`).
+- Neue Styles folgen dem Prinzip: **Token zuerst**, keine direkten Hex-/RGB-/HSL-Werte in Einzelkomponenten.
 
 ### State-Management
 
