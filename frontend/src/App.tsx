@@ -7,36 +7,25 @@ import { TopicsReviewPage } from "./pages/TopicsReviewPage";
 import { PstImportPage } from "./pages/PstImportPage";
 import { AnalysisPage } from "./pages/AnalysisPage";
 import { KiSettingsPage } from "./pages/KiSettingsPage";
-import type { ActiveAiProvider } from "./types/ai";
 import type { AppPage } from "./types/navigation";
 import "./index.css";
 
 function App() {
   const [activePage, setActivePage] = useState<AppPage>("system-status");
-  const [selectedFolderPath, setSelectedFolderPath] = useState<string>("");
-  const [activeProvider, setActiveProvider] = useState<ActiveAiProvider>("ollama");
-
-  function handleContinueToScan() {
-    setActivePage("folder-scan");
-  }
+  const [selectedSourceId, setSelectedSourceId] = useState<string | null>(null);
 
   function renderPage(page: AppPage) {
     switch (page) {
       case "system-status":
         return <SystemStatusPage />;
       case "folder-scan":
-        return (
-          <FolderScanPage
-            selectedFolderPath={selectedFolderPath}
-            onFolderPathChange={setSelectedFolderPath}
-          />
-        );
+        return <FolderScanPage selectedSourceId={selectedSourceId} />;
       case "sources":
         return (
           <SourcesPage
-            selectedFolderPath={selectedFolderPath}
-            onSelectFolderPath={setSelectedFolderPath}
-            onContinueToScan={handleContinueToScan}
+            selectedSourceId={selectedSourceId}
+            onSelectSource={setSelectedSourceId}
+            onContinueToScan={() => setActivePage("folder-scan")}
           />
         );
       case "topics-review":
@@ -46,12 +35,7 @@ function App() {
       case "analysis":
         return <AnalysisPage />;
       case "ki-settings":
-        return (
-          <KiSettingsPage
-            activeProvider={activeProvider}
-            onProviderChange={setActiveProvider}
-          />
-        );
+        return <KiSettingsPage />;
     }
   }
 

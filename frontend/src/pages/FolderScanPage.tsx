@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
 import { persistDocument } from "../api/persistApi";
-import { scanFolder } from "../api/sourcesApi";
+import { scanSource } from "../api/sourcesApi";
 import { DocumentList } from "../components/documents/DocumentList";
 import { StatusBanner } from "../components/status/StatusBanner";
 import type { DocumentScanItem } from "../types/document";
@@ -12,12 +12,12 @@ type PersistState = {
 };
 
 type Props = {
-  selectedFolderPath: string;
-  onFolderPathChange: (path: string) => void;
+  selectedSourceId: string | null;
 };
 
-export function FolderScanPage({ selectedFolderPath, onFolderPathChange }: Props) {
+export function FolderScanPage({ selectedSourceId }: Props) {
   const [documents, setDocuments] = useState<DocumentScanItem[]>([]);
+  const [scanId, setScanId] = useState<string | null>(null);
   const [isScanning, setIsScanning] = useState(false);
   const [scanError, setScanError] = useState<string | null>(null);
   const [persistStates, setPersistStates] = useState<Record<string, PersistState>>({});
@@ -29,12 +29,14 @@ export function FolderScanPage({ selectedFolderPath, onFolderPathChange }: Props
 
   async function handleScan(e: React.FormEvent): Promise<void> {
     e.preventDefault();
-    const path = selectedFolderPath.trim();
+    if (selectedSourceId === null) return;
     setIsScanning(true);
     setScanError(null);
+    setScanId(null);
     setPersistStates({});
     try {
-      const response = await scanFolder({ folder_path: path });
+      const response = await scanSource(selectedSourceId);
+      setScanId(response.scan_id);
       setDocuments(response.items);
     } catch (err) {
       setDocuments([]);
@@ -45,15 +47,16 @@ export function FolderScanPage({ selectedFolderPath, onFolderPathChange }: Props
   }
 
   async function handlePersist(doc: DocumentScanItem): Promise<void> {
+    if (scanId === null) return;
     setPersistStates((prev) => ({
       ...prev,
-      [doc.file_path]: { status: "saving", message: "Speicherung läuft ..." },
+      [doc.document_id]: { status: "saving", message: "Speicherung läuft ..." },
     }));
     try {
-      const response = await persistDocument(doc.content_hash);
+      const response = await persistDocument(scanId, doc.document_id);
       setPersistStates((prev) => ({
         ...prev,
-        [doc.file_path]: {
+        [doc.document_id]: {
           status: "success",
           message: `Erfolgreich gespeichert: ${response.file_path}`,
         },
@@ -62,7 +65,7 @@ export function FolderScanPage({ selectedFolderPath, onFolderPathChange }: Props
       const message = err instanceof Error ? err.message : "Unbekannter Fehler beim Speichern.";
       setPersistStates((prev) => ({
         ...prev,
-        [doc.file_path]: { status: "error", message },
+        [doc.document_id]: { status: "error", message },
       }));
     }
   }
@@ -72,25 +75,18 @@ export function FolderScanPage({ selectedFolderPath, onFolderPathChange }: Props
       <h1>Dokumentenimport</h1>
 
       <form className="panel" onSubmit={handleScan}>
-        <h2>Lokalen Ordner scannen</h2>
-        <label className="label" htmlFor="folder-path">
-          Ordnerpfad
-        </label>
-        <input
-          id="folder-path"
-          className="text-input"
-          type="text"
-          value={selectedFolderPath}
-          onChange={(e) => onFolderPathChange(e.target.value)}
-          placeholder="z. B. /workspace/data/sample_docs"
-          required
-        />
+        <h2>Quelle scannen</h2>
+        {selectedSourceId === null ? (
+          <p className="hint">Keine Quelle aktiv. Wählen Sie zuerst eine Quelle in der Quellenverwaltung.</p>
+        ) : (
+          <p className="status-message pending">Aktive Quelle: {selectedSourceId}</p>
+        )}
         <button
           className="action-button"
           type="submit"
-          disabled={isScanning || selectedFolderPath.trim().length === 0}
+          disabled={isScanning || selectedSourceId === null}
         >
-          {isScanning ? "Scanne ..." : "Ordner scannen"}
+          {isScanning ? "Scanne ..." : "Quelle scannen"}
         </button>
       </form>
 

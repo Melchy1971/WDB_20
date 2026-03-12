@@ -1,5 +1,6 @@
 /** Ein vom Backend gescanntes Dokument — kein Volltext, nur Metadaten + Vorschau. */
 export type DocumentScanItem = {
+  document_id: string;
   file_name: string;
   file_path: string;
   extension: string;
@@ -11,10 +12,12 @@ export type DocumentScanItem = {
   last_modified: string;
   size_bytes: number;
   parse_status: string;
+  parse_error: string | null;
 };
 
 /** Antwort des Scan-Endpunkts. */
-export type DocumentListResponse = {
+export type DocumentScanResponse = {
+  scan_id: string;
   items: DocumentScanItem[];
 };
 
@@ -23,9 +26,10 @@ export type FolderSourceRequest = {
   folder_path: string;
 };
 
-/** Kommando zum Persistieren — nur die ID, kein Volltext. */
-export type PersistDocumentCommand = {
-  content_hash: string;
+/** Kommando zum Persistieren — nur scan_id + document_id, kein Volltext. */
+export type PersistDocumentByIdCommand = {
+  scan_id: string;
+  document_id: string;
 };
 
 /** Antwort des Persistier-Endpunkts. */

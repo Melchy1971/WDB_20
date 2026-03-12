@@ -1,18 +1,25 @@
-/**
- * aiSettingsApi — Future stub.
- *
- * KI-Provider-Endpunkte existieren im Backend noch nicht.
- * Aktuell liegt der Provider-State ausschließlich im App-State (App.tsx).
- *
- * Geplante Endpunkte (noch nicht implementiert):
- *   GET  /settings/ai-provider  → liefert den gespeicherten Provider
- *   POST /settings/ai-provider  → speichert die Providerauswahl
- *
- * Sobald die Endpunkte verfügbar sind, werden hier Funktionen ergänzt:
- *   fetchAiProvider(): Promise<AiProvider>
- *   saveAiProvider(provider: ActiveAiProvider): Promise<void>
- *
- * App.tsx initialisiert den Provider dann per useEffect statt useState.
- */
+import { apiGet, apiPost } from "./client";
+import type {
+  ActiveAiProvider,
+  AiProvider,
+  AiProviderGetResponse,
+  AiProviderSetRequest,
+  AiProviderSetResponse,
+} from "../types/ai";
 
-export {};
+export function fetchAiProvider(): Promise<AiProvider> {
+  return apiGet<AiProviderGetResponse>("/settings/ai-provider").then(
+    (res) => res.active_provider
+  );
+}
+
+/**
+ * Sendet einen Providerwechsel an das Backend und gibt den vom Backend
+ * bestätigten Wert zurück — nie einen lokalen Annahmewert.
+ */
+export function saveAiProvider(provider: ActiveAiProvider): Promise<AiProvider> {
+  return apiPost<AiProviderSetRequest, AiProviderSetResponse>(
+    "/settings/ai-provider",
+    { active_provider: provider }
+  ).then((res) => res.active_provider);
+}

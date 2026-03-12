@@ -13,6 +13,7 @@ type Props = {
 export function DocumentCard({ document, persistStatus, persistMessage, onPersist }: Props) {
   const isSaving = persistStatus === "saving";
   const isDone = persistStatus === "success";
+  const canPersist = document.parse_status === "parsed";
 
   return (
     <article className="card">
@@ -32,6 +33,10 @@ export function DocumentCard({ document, persistStatus, persistMessage, onPersis
         <dd>{document.last_modified}</dd>
       </dl>
 
+      {document.parse_error && (
+        <p className="status-message error">{document.parse_error}</p>
+      )}
+
       {document.preview_text && (
         <PreviewBox title="Vorschau" content={document.preview_text} />
       )}
@@ -40,7 +45,7 @@ export function DocumentCard({ document, persistStatus, persistMessage, onPersis
         className="action-button"
         type="button"
         onClick={onPersist}
-        disabled={isSaving || isDone}
+        disabled={isSaving || isDone || !canPersist}
       >
         {isSaving ? "Speichere ..." : isDone ? "Gespeichert ✓" : "In Neo4j speichern"}
       </button>

@@ -1,15 +1,28 @@
 from app.adapters.neo4j_adapter import Neo4jAdapter
-from app.models.document_models import PersistDocumentRequest
+from app.models.document_models import ParsedDocument
+from app.services import scan_store_service as scan_store
 
 
 class PersistService:
     def __init__(self) -> None:
         self.neo4j = Neo4jAdapter()
 
-    def persist_document(self, document: PersistDocumentRequest) -> None:
+    def persist_by_id(self, scan_id: str, document_id: str) -> str:
+        """Lädt das Dokument aus dem Scan-Store und schreibt es nach Neo4j. Gibt file_path zurück."""
+        document = scan_store.get(scan_id, document_id)
+        if document is None:
+            raise KeyError(
+                f"Dokument nicht im Scan-Store: scan_id={scan_id}, document_id={document_id}. "
+                "Bitte erneut scannen."
+            )
+        self._write_to_neo4j(document)
+        return document.file_path
+
+    def _write_to_neo4j(self, document: ParsedDocument) -> None:
         query = """
         MERGE (d:Document {filePath: $file_path})
-        SET d.fileName = $file_name,
+        SET d.documentId = $document_id,
+            d.fileName = $file_name,
             d.extension = $extension,
             d.mimeType = $mime_type,
             d.sourceType = $source_type,
@@ -24,6 +37,7 @@ class PersistService:
         RETURN d.filePath AS filePath
         """
         self.neo4j.execute_write(query, {
+            "document_id": document.document_id,
             "file_path": document.file_path,
             "file_name": document.file_name,
             "extension": document.extension,

@@ -23,10 +23,10 @@ export function DocumentList({ documents, persistStates, onPersist, isScanning }
       )}
       <div className="card-grid">
         {documents.map((doc) => {
-          const ps = persistStates[doc.file_path] ?? { status: "idle", message: "" };
+          const ps = persistStates[doc.document_id] ?? { status: "idle", message: "" };
           return (
             <DocumentCard
-              key={doc.file_path}
+              key={doc.document_id}
               document={doc}
               persistStatus={ps.status}
               persistMessage={ps.message}

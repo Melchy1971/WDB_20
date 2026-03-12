@@ -1,3 +1,4 @@
+from dataclasses import dataclass, field
 from email import policy
 from email.parser import BytesParser
 from pathlib import Path
@@ -6,32 +7,86 @@ from docx import Document as DocxDocument
 from pypdf import PdfReader
 
 
+@dataclass
+class ParseResult:
+	text_content: str
+	mime_type: str
+	parser_type: str
+	parse_status: str           # "parsed" | "failed" | "unsupported"
+	parse_error: str | None = field(default=None)
+
+
 class DocumentParserService:
-	def parse_file(self, file_path: Path) -> tuple[str, str, str, str]:
+	def parse_file(self, file_path: Path) -> ParseResult:
+		"""
+		Parst eine Datei und gibt immer ein ParseResult zurück.
+		Exceptions der Format-Parser werden pro Datei isoliert — kein globaler Abbruch.
+		"""
 		extension = file_path.suffix.lower()
 
 		if extension == ".txt":
-			text = self._parse_txt(file_path)
-			return text, "text/plain", "txt_parser", "parsed"
+			return self._safe_parse(
+				self._parse_txt, file_path,
+				mime_type="text/plain",
+				parser_type="txt_parser",
+			)
 
 		if extension == ".pdf":
-			text = self._parse_pdf(file_path)
-			return text, "application/pdf", "pdf_parser", "parsed"
+			return self._safe_parse(
+				self._parse_pdf, file_path,
+				mime_type="application/pdf",
+				parser_type="pdf_parser",
+			)
 
 		if extension == ".docx":
-			text = self._parse_docx(file_path)
-			return (
-				text,
-				"application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-				"docx_parser",
-				"parsed",
+			return self._safe_parse(
+				self._parse_docx, file_path,
+				mime_type="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+				parser_type="docx_parser",
 			)
 
 		if extension == ".eml":
-			text = self._parse_eml(file_path)
-			return text, "message/rfc822", "eml_parser", "parsed"
+			return self._safe_parse(
+				self._parse_eml, file_path,
+				mime_type="message/rfc822",
+				parser_type="eml_parser",
+			)
 
-		return "", "application/octet-stream", "unsupported_parser", "unsupported"
+		return ParseResult(
+			text_content="",
+			mime_type="application/octet-stream",
+			parser_type="unsupported_parser",
+			parse_status="unsupported",
+		)
+
+	# ── Interner Wrapper ───────────────────────────────────────────────────────
+
+	def _safe_parse(
+		self,
+		parser_fn,
+		file_path: Path,
+		*,
+		mime_type: str,
+		parser_type: str,
+	) -> ParseResult:
+		try:
+			text_content = parser_fn(file_path)
+			return ParseResult(
+				text_content=text_content,
+				mime_type=mime_type,
+				parser_type=parser_type,
+				parse_status="parsed",
+			)
+		except Exception as exc:
+			return ParseResult(
+				text_content="",
+				mime_type=mime_type,
+				parser_type=parser_type,
+				parse_status="failed",
+				parse_error=f"{type(exc).__name__}: {exc}",
+			)
+
+	# ── Format-Parser ──────────────────────────────────────────────────────────
 
 	def _parse_txt(self, file_path: Path) -> str:
 		return file_path.read_text(encoding="utf-8", errors="ignore")
