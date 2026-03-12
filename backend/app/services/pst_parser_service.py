@@ -1,17 +1,17 @@
 """
-pst_parser_service — Echter PST-Ordnerbaum-Parser auf Basis von pypff (libpff-python).
+pst_parser_service — Echter PST-Ordnerbaum-Parser auf Basis von libratom.
 
 Liest die Ordnerhierarchie einer PST/OST-Datei und wandelt sie in
 SourceTreeResponse-Modelle um. E-Mail-Inhalte werden *nicht* gelesen.
 
-Voraussetzung:
-    pip install libpff-python
-    (erfordert Microsoft C++ Build Tools unter Windows)
+Hinweis:
+    libratom selbst kapselt intern pff-Handling. Die lokale API kann je nach
+    Version variieren; daher nutzt dieser Service eine kleine Adapter-Schicht.
 
 Raises:
-    ImportError   — wenn libpff-python nicht installiert ist
+    ImportError      — wenn libratom nicht installiert ist
     FileNotFoundError — wenn die PST-Datei nicht existiert
-    OSError       — wenn pypff die Datei nicht öffnen kann (beschädigt, kein Zugriff)
+    OSError          — wenn die Datei nicht gelesen werden kann
 """
 
 from __future__ import annotations
@@ -19,41 +19,111 @@ from __future__ import annotations
 from pathlib import Path
 from typing import Any
 
-try:
-    import pypff  # type: ignore[import-untyped]
-except ImportError as exc:  # pragma: no cover
-    raise ImportError(
-        "pypff (libpff-python) ist nicht installiert. "
-        "Installiere es mit: pip install libpff-python\n"
-        "Unter Windows werden Microsoft C++ Build Tools benötigt: "
-        "https://visualstudio.microsoft.com/visual-cpp-build-tools/"
-    ) from exc
-
 from app.models.tree_models import SourceTreeResponse, TreeNode
 
 
-def _folder_to_node(folder: Any) -> TreeNode:
+def _load_libratom_archive_type() -> Any:
+    try:
+        from libratom.lib.pff import PffArchive  # type: ignore[import-untyped]
+    except ImportError as exc:  # pragma: no cover
+        raise ImportError(
+            "libratom ist nicht installiert. "
+            "Installiere es mit: pip install libratom"
+        ) from exc
+    return PffArchive
+
+
+class _LibratomPstAdapter:
+    """Adapter für unterschiedliche libratom/pff-Objektformen."""
+
+    @staticmethod
+    def open_archive(pst_path: Path) -> Any:
+        archive_type = _load_libratom_archive_type()
+        archive = archive_type()
+        if hasattr(archive, "load"):
+            archive.load(str(pst_path))
+            return archive
+        raise OSError("libratom PffArchive unterstützt keine load()-Methode.")
+
+    @staticmethod
+    def close_archive(archive: Any) -> None:
+        close_method = getattr(archive, "close", None)
+        if callable(close_method):
+            close_method()
+            return
+        data_obj = getattr(archive, "_data", None)
+        data_close = getattr(data_obj, "close", None)
+        if callable(data_close):
+            data_close()
+
+    @staticmethod
+    def get_root_folder(archive: Any) -> Any:
+        data_obj = getattr(archive, "_data", None)
+        root_folder = getattr(data_obj, "root_folder", None)
+        if root_folder is not None:
+            return root_folder
+
+        folders_method = getattr(archive, "folders", None)
+        if callable(folders_method):
+            folder_iter = folders_method()
+            try:
+                return next(folder_iter)
+            except StopIteration as exc:
+                raise OSError("PST enthält keine Root-Ordnerstruktur.") from exc
+
+        raise OSError("Root-Ordner konnte über libratom nicht ermittelt werden.")
+
+    @staticmethod
+    def get_folder_identifier(folder: Any) -> str:
+        identifier = getattr(folder, "identifier", None)
+        if identifier is None:
+            raise OSError("Ordner-Identifier fehlt; stabile node_id kann nicht gebildet werden.")
+        return str(identifier)
+
+    @staticmethod
+    def get_folder_name(folder: Any, node_id: str) -> str:
+        name = getattr(folder, "name", None)
+        return name or f"Ordner-{node_id}"
+
+    @staticmethod
+    def get_sub_folders(folder: Any) -> list[Any]:
+        sub_folders = getattr(folder, "sub_folders", None)
+        if sub_folders is not None:
+            return list(sub_folders)
+
+        number_of_sub_folders = getattr(folder, "number_of_sub_folders", None)
+        get_sub_folder = getattr(folder, "get_sub_folder", None)
+        if isinstance(number_of_sub_folders, int) and callable(get_sub_folder):
+            return [get_sub_folder(i) for i in range(number_of_sub_folders)]
+
+        return []
+
+    @staticmethod
+    def get_direct_message_count(folder: Any) -> int:
+        for attr_name in ("number_of_sub_messages", "number_of_messages"):
+            value = getattr(folder, attr_name, None)
+            if isinstance(value, int):
+                return value
+        return 0
+
+
+def _folder_to_node(folder: Any, adapter: _LibratomPstAdapter) -> TreeNode:
     """
-    Wandelt einen pypff-Ordner rekursiv in einen TreeNode um.
+    Wandelt einen PST-Ordner rekursiv in einen TreeNode um.
 
     node_id:
         Wird aus folder.identifier gebildet (stabiler Integer-Bezeichner
         aus dem PST-Format). Format: Dezimalstring, z. B. "290".
-        Damit sind IDs dateiunabhängig reproduzierbar.
 
     item_count:
         Summe aus Unterordnern + direkten Nachrichten des Ordners.
-        Gibt dem Frontend einen schnellen Überblick ohne alle Kinder zu laden.
     """
-    node_id = str(folder.identifier)
-    name: str = folder.name or f"Ordner-{node_id}"
+    node_id = adapter.get_folder_identifier(folder)
+    name = adapter.get_folder_name(folder, node_id)
+    sub_folders = adapter.get_sub_folders(folder)
 
-    children: list[TreeNode] = [
-        _folder_to_node(folder.get_sub_folder(i))
-        for i in range(folder.number_of_sub_folders)
-    ]
-
-    item_count = folder.number_of_sub_folders + folder.number_of_messages
+    children = [_folder_to_node(sub_folder, adapter) for sub_folder in sub_folders]
+    item_count = len(sub_folders) + adapter.get_direct_message_count(folder)
 
     return TreeNode(
         id=node_id,
@@ -82,7 +152,7 @@ def parse_pst_tree(pst_path: str, source_id: str) -> SourceTreeResponse:
 
     Raises:
         FileNotFoundError: wenn *pst_path* nicht auf dem Dateisystem existiert.
-        OSError: wenn pypff die Datei nicht lesen kann.
+        OSError: wenn libratom die Datei nicht lesen kann.
     """
     path = Path(pst_path)
     if not path.exists():
@@ -90,12 +160,34 @@ def parse_pst_tree(pst_path: str, source_id: str) -> SourceTreeResponse:
     if not path.is_file():
         raise OSError(f"Pfad ist keine Datei: {pst_path}")
 
-    pff_file: Any = pypff.file()  # type: ignore[attr-defined]
+    adapter = _LibratomPstAdapter()
+    archive = adapter.open_archive(path)
     try:
-        pff_file.open(str(path))  # type: ignore[union-attr]
-        root_folder: Any = pff_file.get_root_folder()  # type: ignore[union-attr]
-        root_node = _folder_to_node(root_folder)
+        root_folder = adapter.get_root_folder(archive)
+        root_node = _folder_to_node(root_folder, adapter)
     finally:
-        pff_file.close()  # type: ignore[union-attr]
+        adapter.close_archive(archive)
 
     return SourceTreeResponse(source_id=source_id, root=root_node)
+
+
+class PstParserService:
+    @staticmethod
+    def build_tree(source_id: str, pst_path: str) -> SourceTreeResponse:
+        return parse_pst_tree(pst_path=pst_path, source_id=source_id)
+
+    @staticmethod
+    def collect_valid_node_ids(tree: SourceTreeResponse) -> set[str]:
+        return collect_valid_node_ids_from_root(tree.root)
+
+
+def collect_valid_node_ids_from_root(root: TreeNode) -> set[str]:
+    valid_ids: set[str] = set()
+
+    def walk(node: TreeNode) -> None:
+        valid_ids.add(node.id)
+        for child in node.children:
+            walk(child)
+
+    walk(root)
+    return valid_ids

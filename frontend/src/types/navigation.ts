@@ -6,5 +6,6 @@ export type AppPage =
   | "pst-import"
   | "pst-tree"
   | "pst-import-preview"
+  | "pst-import-run"
   | "analysis"
   | "ki-settings";

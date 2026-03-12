@@ -37,6 +37,7 @@ const JOB_STATUS_CLASS: Record<JobStatus, string> = {
 
 type Props = {
   selectedSourceId: string | null;
+  onOpenImportRun: (importRunId: string) => void;
 };
 
 function PreviewItem({ item }: { item: ImportPreviewItem }) {
@@ -74,6 +75,8 @@ function JobPanel({
             {JOB_STATUS_LABELS[job.status]}
           </span>
         </dd>
+        <dt>ImportRun-ID</dt>
+        <dd>{job.import_run_id ?? "-"}</dd>
         <dt>Elemente</dt>
         <dd>{job.selected_count}</dd>
         <dt>Meldung</dt>
@@ -98,7 +101,7 @@ function JobPanel({
   );
 }
 
-export function PstImportPreviewPage({ selectedSourceId }: Props) {
+export function PstImportPreviewPage({ selectedSourceId, onOpenImportRun }: Props) {
   const [preview, setPreview] = useState<ImportPreviewResponse | null>(null);
   const [loadState, setLoadState] = useState<LoadState>("idle");
   const [loadError, setLoadError] = useState<string | null>(null);
@@ -140,6 +143,9 @@ export function PstImportPreviewPage({ selectedSourceId }: Props) {
       const started = await startImportJob(selectedSourceId);
       setJob(started);
       setJobState("ready");
+      if (started.import_run_id !== null) {
+        onOpenImportRun(started.import_run_id);
+      }
     } catch (err) {
       setJobError(err instanceof Error ? err.message : "Fehler beim Starten des Import-Jobs.");
       setJobState("error");

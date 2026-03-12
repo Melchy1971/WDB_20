@@ -30,3 +30,26 @@ def get_selection(source_id: str) -> list[str]:
 
 def set_selection(source_id: str, node_ids: list[str]) -> list[str]:
     return _store.set(source_id, node_ids)
+
+
+def sanitize_selection(source_id: str, valid_node_ids: set[str]) -> list[str]:
+    current = _store.get(source_id)
+    cleaned = [node_id for node_id in current if node_id in valid_node_ids]
+    _store.set(source_id, cleaned)
+    return cleaned
+
+
+def set_validated_selection(source_id: str, node_ids: list[str], valid_node_ids: set[str]) -> list[str]:
+    cleaned: list[str] = []
+    seen: set[str] = set()
+
+    for node_id in node_ids:
+        if node_id not in valid_node_ids:
+            continue
+        if node_id in seen:
+            continue
+        seen.add(node_id)
+        cleaned.append(node_id)
+
+    _store.set(source_id, cleaned)
+    return cleaned

@@ -20,6 +20,10 @@ class Settings(BaseSettings):
     ollama_base_url: str = "http://localhost:11434"
     ollama_model: str = "llama3.1"
 
+    dnabot_base_url: str = "http://localhost:8080"
+    dnabot_model: str = "default"
+    dnabot_api_key: str | None = None
+
     model_config = SettingsConfigDict(
         env_file=ENV_FILE,
         env_file_encoding="utf-8",

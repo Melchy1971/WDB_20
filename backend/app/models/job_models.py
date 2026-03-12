@@ -19,7 +19,9 @@ class ImportJob(BaseModel):
     source_id: str
     job_type: JobType
     status: JobStatus
+    import_run_id: str | None = None
     selected_count: int
+    error_message: str | None = None
     message: str
 
 
@@ -42,7 +44,9 @@ class StartImportJobResponse(BaseModel):
     source_id: str
     job_type: JobType
     status: JobStatus
+    import_run_id: str | None = None
     selected_count: int
+    error_message: str | None = None
     message: str
 
 
@@ -57,5 +61,7 @@ class ImportJobStatusResponse(BaseModel):
     source_id: str
     job_type: JobType
     status: JobStatus
+    import_run_id: str | None = None
     selected_count: int
+    error_message: str | None = None
     message: str

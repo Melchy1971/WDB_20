@@ -17,12 +17,32 @@ from app.models.selection_models import (
 from app.models.import_models import ImportPreviewResponse
 from app.models.tree_models import SourceTreeResponse
 from app.services import import_preview_service
-from app.services import pst_parser_service
 from app.services import source_registry_service
 from app.services import source_selection_service
+from app.services.pst_parser_service import PstParserService
 from app.services.file_service import FileService
 
 router = APIRouter(prefix="/sources", tags=["sources"])
+
+
+def _build_pst_tree_or_raise(source_id: str, pst_path: str) -> SourceTreeResponse:
+    try:
+        return PstParserService.build_tree(
+            source_id=source_id,
+            pst_path=pst_path,
+        )
+    except ImportError as exc:
+        raise HTTPException(
+            status_code=503,
+            detail=f"PST-Parser nicht verfügbar: {exc}",
+        ) from exc
+    except FileNotFoundError as exc:
+        raise HTTPException(status_code=422, detail=str(exc)) from exc
+    except OSError as exc:
+        raise HTTPException(
+            status_code=422,
+            detail=f"PST-Datei konnte nicht gelesen werden: {exc}",
+        ) from exc
 
 
 @router.get("", response_model=ListSourcesResponse)
@@ -68,23 +88,7 @@ def get_source_tree(source_id: str) -> SourceTreeResponse:
                 f"(Quellentyp dieser Quelle: {source.source_type})."
             ),
         )
-    try:
-        return pst_parser_service.parse_pst_tree(
-            pst_path=source.source_path,
-            source_id=source_id,
-        )
-    except ImportError as exc:
-        raise HTTPException(
-            status_code=503,
-            detail=f"PST-Parser nicht verfügbar: {exc}",
-        ) from exc
-    except FileNotFoundError as exc:
-        raise HTTPException(status_code=422, detail=str(exc)) from exc
-    except OSError as exc:
-        raise HTTPException(
-            status_code=422,
-            detail=f"PST-Datei konnte nicht gelesen werden: {exc}",
-        ) from exc
+    return _build_pst_tree_or_raise(source_id=source_id, pst_path=source.source_path)
 
 
 @router.get("/{source_id}/selection", response_model=SourceSelectionResponse)
@@ -92,9 +96,17 @@ def get_selection(source_id: str) -> SourceSelectionResponse:
     source = source_registry_service.get_source(source_id)
     if source is None:
         raise HTTPException(status_code=404, detail=f"Quelle nicht gefunden: {source_id}")
+
+    if source.source_type == "PST":
+        tree = _build_pst_tree_or_raise(source_id=source_id, pst_path=source.source_path)
+        valid_node_ids = PstParserService.collect_valid_node_ids(tree)
+        selected_node_ids = source_selection_service.sanitize_selection(source_id, valid_node_ids)
+    else:
+        selected_node_ids = source_selection_service.get_selection(source_id)
+
     return SourceSelectionResponse(
         source_id=source_id,
-        selected_node_ids=source_selection_service.get_selection(source_id),
+        selected_node_ids=selected_node_ids,
     )
 
 
@@ -105,7 +117,18 @@ def update_selection(
     source = source_registry_service.get_source(source_id)
     if source is None:
         raise HTTPException(status_code=404, detail=f"Quelle nicht gefunden: {source_id}")
-    saved = source_selection_service.set_selection(source_id, request.selected_node_ids)
+
+    if source.source_type == "PST":
+        tree = _build_pst_tree_or_raise(source_id=source_id, pst_path=source.source_path)
+        valid_node_ids = PstParserService.collect_valid_node_ids(tree)
+        saved = source_selection_service.set_validated_selection(
+            source_id=source_id,
+            node_ids=request.selected_node_ids,
+            valid_node_ids=valid_node_ids,
+        )
+    else:
+        saved = source_selection_service.set_selection(source_id, request.selected_node_ids)
+
     return UpdateSourceSelectionResponse(source_id=source_id, selected_node_ids=saved)
 
 
@@ -122,24 +145,9 @@ def get_import_preview(source_id: str) -> ImportPreviewResponse:
                 f"(Quellentyp dieser Quelle: {source.source_type})."
             ),
         )
-    selected_node_ids = source_selection_service.get_selection(source_id)
-    try:
-        tree = pst_parser_service.parse_pst_tree(
-            pst_path=source.source_path,
-            source_id=source_id,
-        )
-    except ImportError as exc:
-        raise HTTPException(
-            status_code=503,
-            detail=f"PST-Parser nicht verfügbar: {exc}",
-        ) from exc
-    except FileNotFoundError as exc:
-        raise HTTPException(status_code=422, detail=str(exc)) from exc
-    except OSError as exc:
-        raise HTTPException(
-            status_code=422,
-            detail=f"PST-Datei konnte nicht gelesen werden: {exc}",
-        ) from exc
+    tree = _build_pst_tree_or_raise(source_id=source_id, pst_path=source.source_path)
+    valid_node_ids = PstParserService.collect_valid_node_ids(tree)
+    selected_node_ids = source_selection_service.sanitize_selection(source_id, valid_node_ids)
     return import_preview_service.get_import_preview(source, selected_node_ids, tree.root)
 
 

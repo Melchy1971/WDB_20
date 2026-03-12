@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { createPstSource, createSource, listSources } from "../api/sourcesApi";
 import { StatusBanner } from "../components/status/StatusBanner";
 import type { Source, SourceType } from "../types/source";
@@ -28,6 +28,11 @@ const PATH_LABELS: Record<SourceType, { label: string; placeholder: string }> = 
   },
 };
 
+const PICKER_BADGE_LABELS: Record<SourceType, string> = {
+  LOCAL_FOLDER: "Ordner gewählt",
+  PST: "PST gewählt",
+};
+
 export function SourcesPage({ selectedSourceId, onSelectSource, onContinueToScan }: Props) {
   const [sources, setSources] = useState<Source[]>([]);
   const [loadState, setLoadState] = useState<LoadState>("loading");
@@ -36,8 +41,12 @@ export function SourcesPage({ selectedSourceId, onSelectSource, onContinueToScan
   const [sourceType, setSourceType] = useState<SourceType>("LOCAL_FOLDER");
   const [label, setLabel] = useState("");
   const [path, setPath] = useState("");
+  const [pathLocked, setPathLocked] = useState(false);
+  const [pathPickerHint, setPathPickerHint] = useState<string | null>(null);
   const [createState, setCreateState] = useState<CreateState>("idle");
   const [createError, setCreateError] = useState<string | null>(null);
+  const folderInputRef = useRef<HTMLInputElement | null>(null);
+  const pstInputRef = useRef<HTMLInputElement | null>(null);
 
   useEffect(() => {
     listSources()
@@ -54,7 +63,116 @@ export function SourcesPage({ selectedSourceId, onSelectSource, onContinueToScan
   function handleTypeChange(newType: SourceType): void {
     setSourceType(newType);
     setPath("");
+    setPathLocked(false);
+    setPathPickerHint(null);
     setCreateError(null);
+  }
+
+  function tryExtractFolderPathFromFile(file: File): string | null {
+    const fileWithPath = file as File & { path?: string; webkitRelativePath?: string };
+    const absoluteCandidate = fileWithPath.path;
+    if (absoluteCandidate && absoluteCandidate.trim()) {
+      const normalized = absoluteCandidate.replace(/\\/g, "/");
+      const lastSlash = normalized.lastIndexOf("/");
+      if (lastSlash > 0) {
+        return normalized.slice(0, lastSlash);
+      }
+    }
+
+    const relativeCandidate = fileWithPath.webkitRelativePath;
+    if (relativeCandidate && relativeCandidate.trim()) {
+      const topFolder = relativeCandidate.split("/")[0];
+      if (topFolder) {
+        return topFolder;
+      }
+    }
+
+    return null;
+  }
+
+  function handleFolderPicked(event: React.ChangeEvent<HTMLInputElement>): void {
+    const files = event.target.files;
+    if (!files || files.length === 0) {
+      return;
+    }
+
+    const extractedPath = tryExtractFolderPathFromFile(files[0]);
+    if (!extractedPath) {
+      setPathPickerHint(
+        "Ordner wurde ausgewählt, aber der Browser liefert keinen nutzbaren Pfad. Bitte Pfad manuell eintragen."
+      );
+      return;
+    }
+
+    setPath(extractedPath);
+    setPathLocked(true);
+    if (extractedPath.includes("/") || extractedPath.includes("\\")) {
+      setPathPickerHint(null);
+    } else {
+      setPathPickerHint(
+        "Ordnername übernommen. Falls nötig, ergänzen Sie den vollständigen absoluten Ordnerpfad."
+      );
+    }
+  }
+
+  function handleOpenFolderPicker(): void {
+    folderInputRef.current?.click();
+  }
+
+  function tryExtractFilePath(file: File): string | null {
+    const fileWithPath = file as File & { path?: string };
+    const absoluteCandidate = fileWithPath.path;
+    if (absoluteCandidate && absoluteCandidate.trim()) {
+      return absoluteCandidate;
+    }
+    if (file.name && file.name.trim()) {
+      return file.name;
+    }
+    return null;
+  }
+
+  function handlePstFilePicked(event: React.ChangeEvent<HTMLInputElement>): void {
+    const files = event.target.files;
+    if (!files || files.length === 0) {
+      return;
+    }
+
+    const pickedFile = files[0];
+    const extractedPath = tryExtractFilePath(pickedFile);
+    if (!extractedPath) {
+      setPathPickerHint(
+        "PST-Datei wurde ausgewählt, aber der Browser liefert keinen nutzbaren Pfad. Bitte Pfad manuell eintragen."
+      );
+      return;
+    }
+
+    setPath(extractedPath);
+    setPathLocked(true);
+    if (extractedPath.includes("/") || extractedPath.includes("\\")) {
+      setPathPickerHint(null);
+    } else {
+      setPathPickerHint(
+        "Dateiname übernommen. Falls nötig, ergänzen Sie den vollständigen absoluten Dateipfad zur .pst-Datei."
+      );
+    }
+  }
+
+  function handleOpenPstPicker(): void {
+    pstInputRef.current?.click();
+  }
+
+  function handleUnlockPath(): void {
+    setPathLocked(false);
+    setPathPickerHint(null);
+
+    if (sourceType === "LOCAL_FOLDER") {
+      handleOpenFolderPicker();
+      return;
+    }
+
+    if (sourceType === "PST") {
+      handleOpenPstPicker();
+    }
   }
 
   async function handleCreate(e: React.FormEvent): Promise<void> {
@@ -75,6 +193,8 @@ export function SourcesPage({ selectedSourceId, onSelectSource, onContinueToScan
       setSources((prev) => [...prev, newSource]);
       setLabel("");
       setPath("");
+      setPathLocked(false);
+      setPathPickerHint(null);
       setCreateState("idle");
     } catch (err) {
       setCreateError(err instanceof Error ? err.message : "Fehler beim Anlegen der Quelle.");
@@ -122,7 +242,51 @@ export function SourcesPage({ selectedSourceId, onSelectSource, onContinueToScan
 
         <label className="label" htmlFor="source-path">
           {pathMeta.label}
+          {pathLocked && (
+            <span className="picker-selected-badge">{PICKER_BADGE_LABELS[sourceType]}</span>
+          )}
         </label>
+        {sourceType === "LOCAL_FOLDER" && (
+          <>
+            <input
+              ref={folderInputRef}
+              type="file"
+              className="hidden-file-input"
+              title="Lokalen Ordner auswählen"
+              aria-label="Lokalen Ordner auswählen"
+              onChange={handleFolderPicked}
+              multiple
+              {...({ webkitdirectory: "", directory: "" } as Record<string, string>)}
+            />
+            <button
+              type="button"
+              className="action-button action-button--secondary"
+              onClick={handleOpenFolderPicker}
+            >
+              Lokalen Ordner auswählen
+            </button>
+          </>
+        )}
+        {sourceType === "PST" && (
+          <>
+            <input
+              ref={pstInputRef}
+              type="file"
+              className="hidden-file-input"
+              title="PST-Datei auswählen"
+              aria-label="PST-Datei auswählen"
+              onChange={handlePstFilePicked}
+              accept=".pst"
+            />
+            <button
+              type="button"
+              className="action-button action-button--secondary"
+              onClick={handleOpenPstPicker}
+            >
+              PST-Datei auswählen
+            </button>
+          </>
+        )}
         <input
           id="source-path"
           className="text-input"
@@ -130,8 +294,23 @@ export function SourcesPage({ selectedSourceId, onSelectSource, onContinueToScan
           value={path}
           onChange={(e) => setPath(e.target.value)}
           placeholder={pathMeta.placeholder}
+          readOnly={pathLocked}
           required
         />
+
+        {pathLocked && (
+          <div className="action-bar">
+            <button
+              type="button"
+              className="action-button action-button--secondary"
+              onClick={handleUnlockPath}
+            >
+              Ändern (neu auswählen)
+            </button>
+          </div>
+        )}
+
+        {pathPickerHint && <p className="hint">{pathPickerHint}</p>}
 
         {createError && (
           <p className="status-message error">{createError}</p>

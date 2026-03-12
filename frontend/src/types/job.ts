@@ -12,7 +12,9 @@ export type ImportJobResponse = {
   source_id: string;
   job_type: JobType;
   status: JobStatus;
+  import_run_id: string | null;
   selected_count: number;
+  error_message: string | null;
   message: string;
 };
 
