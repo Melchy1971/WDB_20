@@ -78,7 +78,7 @@ def start_import_job(
     if len(selected_node_ids) == 0:
         raise HTTPException(
             status_code=400,
-            detail="Keine Knoten ausgewählt. Wählen Sie zuerst Knoten in der PST-Struktur.",
+
         )
 
     job = import_job_service.start_import_job(

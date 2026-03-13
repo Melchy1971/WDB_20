@@ -201,7 +201,7 @@ export function PstImportPreviewPage({ selectedSourceId, onOpenImportRun }: Prop
           <h2>Import-Vorschau</h2>
           {preview.status === "empty" ? (
             <p className="hint">
-              Keine Knoten ausgewählt. Wählen Sie Knoten in der PST-Struktur aus und speichern Sie
+
               die Auswahl.
             </p>
           ) : (

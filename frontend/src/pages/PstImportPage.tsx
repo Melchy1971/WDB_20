@@ -79,7 +79,8 @@ export function PstImportPage({ selectedSourceId, selectedSourceType, onOpenPstT
         <div className="panel">
           <h2>PST scannen</h2>
           <p className="status-message pending">Aktive Quelle: {selectedSourceId}</p>
-          <p className="hint">PST-Dateien werden hier separat gescannt. Der Scan liest die PST-Struktur fuer Auswahl und Import vor.</p>
+         
+         
           <div className="action-bar">
             <button
               type="button"
