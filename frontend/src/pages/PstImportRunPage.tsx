@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+﻿import { useEffect, useState } from "react";
 
 import { fetchImportRun } from "../api/importRunsApi";
 import { StatusBanner } from "../components/status/StatusBanner";
@@ -12,7 +12,7 @@ type Props = {
 
 const IMPORT_RUN_STATUS_LABELS: Record<ImportRun["status"], string> = {
   queued: "In Warteschlange",
-  running: "Läuft …",
+  running: "Läuft ...",
   finished: "Abgeschlossen",
   failed: "Fehlgeschlagen",
 };
@@ -37,19 +37,49 @@ export function PstImportRunPage({ selectedImportRunId }: Props) {
       return;
     }
 
-    setLoadState("loading");
-    setLoadError(null);
+    let cancelled = false;
+    let timeoutId: ReturnType<typeof setTimeout> | null = null;
 
-    fetchImportRun(selectedImportRunId)
-      .then((result) => {
+    const loadRun = async (isInitialLoad: boolean): Promise<void> => {
+      if (isInitialLoad) {
+        setLoadState("loading");
+        setLoadError(null);
+      }
+
+      try {
+        const result = await fetchImportRun(selectedImportRunId);
+        if (cancelled) {
+          return;
+        }
+
         setRun(result);
         setLoadState("ready");
-      })
-      .catch((err) => {
+        setLoadError(null);
+
+        if (result.status === "queued" || result.status === "running") {
+          timeoutId = setTimeout(() => {
+            void loadRun(false);
+          }, 2000);
+        }
+      } catch (err) {
+        if (cancelled) {
+          return;
+        }
+
         setRun(null);
         setLoadError(err instanceof Error ? err.message : "Fehler beim Laden des ImportRun.");
         setLoadState("error");
-      });
+      }
+    };
+
+    void loadRun(true);
+
+    return () => {
+      cancelled = true;
+      if (timeoutId !== null) {
+        clearTimeout(timeoutId);
+      }
+    };
   }, [selectedImportRunId]);
 
   return (
@@ -61,7 +91,7 @@ export function PstImportRunPage({ selectedImportRunId }: Props) {
       )}
 
       {loadState === "loading" && (
-        <p className="status-message pending">ImportRun wird geladen …</p>
+        <p className="status-message pending">ImportRun wird geladen ...</p>
       )}
 
       {loadState === "error" && loadError && (

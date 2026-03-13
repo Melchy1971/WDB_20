@@ -5,6 +5,7 @@ import type {
   CreateSourceRequest,
   ListSourcesResponse,
   Source,
+  UpdateSourcePathRequest,
 } from "../types/source";
 import type { SourceTreeResponse } from "../types/tree";
 import type { ScanAnalysisResponse } from "../types/analysis";
@@ -15,6 +16,12 @@ export function listSources(): Promise<Source[]> {
 
 export function getSelectedSource(): Promise<{ selected_source_id: string; source_type: string } | null> {
   return apiGet<{ selected_source_id: string; source_type: string } | null>("/sources/selected");
+}
+
+export function selectSource(sourceId: string): Promise<{ selected_source_id: string; source_type: string }> {
+  return apiPost<{ source_id: string }, { selected_source_id: string; source_type: string }>("/sources/select", {
+    source_id: sourceId,
+  });
 }
 
 export function createSource(request: CreateSourceRequest): Promise<Source> {
@@ -35,6 +42,26 @@ export function fetchSourceTree(sourceId: string): Promise<SourceTreeResponse> {
 
 export function deleteSource(sourceId: string): Promise<Source> {
   return apiDelete<Source>(`/sources/${sourceId}`);
+}
+
+export function updateSourcePath(sourceId: string, request: UpdateSourcePathRequest): Promise<Source> {
+  return fetch(`${import.meta.env.VITE_API_BASE_URL}/sources/${sourceId}/path`, {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(request),
+  }).then(async (res) => {
+    if (!res.ok) {
+      let detail: string | undefined;
+      try {
+        const body = (await res.json()) as { detail?: string };
+        detail = body.detail;
+      } catch {
+        // ignore parse errors
+      }
+      throw new Error(detail ?? `PATCH /sources/${sourceId}/path: HTTP ${res.status}`);
+    }
+    return res.json() as Promise<Source>;
+  });
 }
 
 export function analyzeScan(scanId: string): Promise<ScanAnalysisResponse> {

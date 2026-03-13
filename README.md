@@ -1,4 +1,4 @@
-# Mail Knowledge Platform
+﻿# Mail Knowledge Platform
 
 Lokales Full-Stack-System zur Extraktion und Speicherung von Wissen aus E-Mails und Dokumenten.
 
@@ -10,35 +10,35 @@ Lokales Full-Stack-System zur Extraktion und Speicherung von Wissen aus E-Mails 
 
 ```
 WDB_20-1/
-├── backend/                  # FastAPI-Backend
-│   ├── main.py               # App-Einstiegspunkt + CORS + uvicorn
-│   ├── requirements.txt
-│   ├── .env / .env.example
-│   └── app/
-│       ├── adapters/         # neo4j_adapter, ollama_adapter
-│       ├── api/
-│       │   ├── router.py     # zentrale Router-Aggregation
-│       │   └── routes/       # health, sources, persist
-│       ├── core/             # config (pydantic-settings)
-│       ├── models/           # document_models, system_models, source_models
-│       └── services/         # FileService, PersistService,
-│                             # DocumentParserService, scan_store
-├── frontend/                 # React-Frontend
-│   └── src/
-│       ├── api/              # client, sourcesApi, persistApi,
-│       │   │                 # systemApi, topicsApi (stub), aiSettingsApi (stub)
-│       ├── components/
-│       │   ├── documents/    # DocumentCard, DocumentList, PreviewBox
-│       │   ├── layout/       # AppLayout, SidebarNav
-│       │   └── status/       # StatusCard, StatusBanner
-│       ├── pages/            # SystemStatusPage, SourcesPage, FolderScanPage,
-│       │   │                 # KiSettingsPage, TopicsReviewPage (stub),
-│       │   │                 # PstImportPage (stub), AnalysisPage (stub)
-│       └── types/            # document.ts, system.ts, navigation.ts, ai.ts
-├── data/sample_docs/         # Testdokumente (.txt, .eml)
-├── docs/                     # Architektur- und Setup-Dokumentation
-├── scripts/                  # Start- und Setup-Skripte
-└── sample_docs/              # zusätzliche Beispieldokumente
+|-- backend/                  # FastAPI-Backend
+|   |-- main.py               # App-Einstiegspunkt + CORS + uvicorn
+|   |-- requirements.txt
+|   |-- .env / .env.example
+|   `-- app/
+|       |-- adapters/         # neo4j_adapter, ollama_adapter
+|       |-- api/
+|       |   |-- router.py     # zentrale Router-Aggregation
+|       |   `-- routes/       # health, sources, persist
+|       |-- core/             # config (pydantic-settings)
+|       |-- models/           # document_models, system_models, source_models
+|       `-- services/         # FileService, PersistService,
+|                             # DocumentParserService, scan_store
+|-- frontend/                 # React-Frontend
+|   `-- src/
+|       |-- api/              # client, sourcesApi, persistApi,
+|       |   |                # systemApi, topicsApi (stub), aiSettingsApi (stub)
+|       |-- components/
+|       |   |-- documents/    # DocumentCard, DocumentList, PreviewBox
+|       |   |-- layout/       # AppLayout, SidebarNav
+|       |   `-- status/       # StatusCard, StatusBanner
+|       |-- pages/            # SystemStatusPage, SourcesPage, FolderScanPage,
+|       |   |                # KiSettingsPage, TopicsReviewPage (stub),
+|       |   |                # PstImportPage (stub), AnalysisPage (stub)
+|       `-- types/            # document.ts, system.ts, navigation.ts, ai.ts
+|-- data/sample_docs/         # Testdokumente (.txt, .eml)
+|-- docs/                     # Architektur- und Setup-Dokumentation
+|-- scripts/                  # Start- und Setup-Skripte
+`-- sample_docs/              # zusaetzliche Beispieldokumente
 ```
 
 ---
@@ -66,7 +66,7 @@ cp .env.example .env             # Werte anpassen
 
 `.env` konfigurieren:
 
-```
+```env
 APP_ENV=dev
 API_HOST=127.0.0.1
 API_PORT=8000
@@ -120,8 +120,8 @@ Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass
 
 ### Troubleshooting (kurz)
 
-- Fehler `Virtuelle Umgebung nicht gefunden`: im Ordner `backend` zuerst `python -m venv .venv` und danach `pip install -r requirements.txt` ausführen.
-- Fehler bei `npm run dev` (z. B. fehlende Pakete): im Ordner `frontend` einmal `npm install` ausführen.
+- Fehler `Virtuelle Umgebung nicht gefunden`: im Ordner `backend` zuerst `python -m venv .venv` und danach `pip install -r requirements.txt` ausfuehren.
+- Fehler bei `npm run dev` (z. B. fehlende Pakete): im Ordner `frontend` einmal `npm install` ausfuehren.
 
 ---
 
@@ -131,13 +131,13 @@ Die Sidebar-Navigation schaltet zwischen Seiten per lokalem App-State (kein reac
 
 | Seite | Status | Beschreibung |
 |---|---|---|
-| System Status | ✅ aktiv | API-, Neo4j- und Ollama-Verbindungsstatus |
-| Dokumentscan | ✅ aktiv | Ordner scannen, Dokumente in Neo4j speichern |
-| KI-Einstellungen | ✅ aktiv | Provider-Auswahl: Local Ollama / DNAbot |
-| Quellenverwaltung | ⏳ Backend ausstehend | Ordnerpfad festlegen, zu Scan weiterleiten |
-| Themenreview | ⏳ geplant | — |
-| PST-Import | ⏳ geplant | — |
-| KI-Analyse | ⏳ geplant | — |
+| System Status | aktiv | API-, Neo4j- und Ollama-Verbindungsstatus |
+| Dokumentscan | aktiv | Ordner scannen, Dokumente in Neo4j speichern |
+| KI-Einstellungen | aktiv | Provider-Auswahl: Local Ollama / DNAbot |
+| Quellenverwaltung | teilweise | Ordnerpfad festlegen, Quellen aktivieren |
+| Themenreview | geplant | - |
+| PST-Import | umgesetzt | PST-Struktur, Auswahl, ImportRun und Vorschau |
+| KI-Analyse | teilweise | Analyse fuer ImportRuns vorhanden |
 
 ---
 
@@ -146,18 +146,18 @@ Die Sidebar-Navigation schaltet zwischen Seiten per lokalem App-State (kein reac
 | Methode | Pfad | Beschreibung |
 |---------|------|--------------|
 | `GET` | `/health` | Systemstatus (API, Neo4j, Ollama) |
-| `POST` | `/sources/folder/scan` | Ordner scannen → Dokumente parsen |
+| `POST` | `/sources/folder/scan` | Ordner scannen -> Dokumente parsen |
 | `POST` | `/persist/document` | Dokument per content_hash in Neo4j speichern |
 
-### Unterstützte Dateiformate
+### Unterstuetzte Dateiformate
 
 `.txt` · `.pdf` · `.docx` · `.eml`
 
 ### Sicherheitskonzept
 
 - `text_content` wird nie ans Frontend geliefert (nur `preview_text`)
-- Persistierung erfolgt ID-basiert (`content_hash`), kein Volltext über die API
-- Dateigröße begrenzt auf 10 MB pro Datei
+- Persistierung erfolgt ID-basiert (`content_hash`), kein Volltext ueber die API
+- Dateigroesse begrenzt auf 10 MB pro Datei
 - Parse-Fehler pro Datei isoliert (kein Abbruch des gesamten Scans)
 
 ---
@@ -166,9 +166,9 @@ Die Sidebar-Navigation schaltet zwischen Seiten per lokalem App-State (kein reac
 
 ### UI-Styleguide (Design Tokens)
 
-- Alle visuellen Zustände laufen zentral über `frontend/src/styles/theme.css` und `frontend/src/index.css`.
+- Alle visuellen Zustaende laufen zentral ueber `frontend/src/styles/theme.css` und `frontend/src/index.css`.
 - In `frontend/src/components/**` und `frontend/src/pages/**` werden keine harten Farbwerte verwendet.
-- Komponenten nutzen ausschließlich semantische Klassen; Farb- und State-Definitionen erfolgen über CSS-Tokens (`var(--tk-...)`).
+- Komponenten nutzen ausschliesslich semantische Klassen; Farb- und State-Definitionen erfolgen ueber CSS-Tokens (`var(--tk-...)`).
 - Neue Styles folgen dem Prinzip: **Token zuerst**, keine direkten Hex-/RGB-/HSL-Werte in Einzelkomponenten.
 
 ### State-Management
@@ -176,8 +176,8 @@ Die Sidebar-Navigation schaltet zwischen Seiten per lokalem App-State (kein reac
 | State | Ort | Beschreibung |
 |---|---|---|
 | `activePage` | `App.tsx` | aktive Seite (Union-Type `AppPage`) |
-| `selectedFolderPath` | `App.tsx` | gemeinsamer Pfad für Quellenverwaltung und Dokumentscan |
-| `activeProvider` | `App.tsx` | KI-Provider (`"ollama"` \| `"dnabot"`) |
+| `selectedFolderPath` | `App.tsx` | gemeinsamer Pfad fuer Quellenverwaltung und Dokumentscan |
+| `activeProvider` | `App.tsx` | KI-Provider (`"ollama"` | `"dnabot"`) |
 
 ### Typen
 
@@ -201,14 +201,14 @@ Die Sidebar-Navigation schaltet zwischen Seiten per lokalem App-State (kein reac
 
 | Feature | Status |
 |---------|--------|
-| System Health Check | ✅ fertig |
-| Ordner scannen & parsen (.txt, .pdf, .docx, .eml) | ✅ fertig |
-| Dokument in Neo4j speichern (ID-basiert) | ✅ fertig |
-| KI-Provider-Auswahl (Ollama / DNAbot) | ✅ Frontend fertig, Backend ausstehend |
-| Quellenverwaltung (Pfad setzen, zu Scan weiterleiten) | ✅ Frontend fertig, Backend ausstehend |
-| Themenextraktion (NLP) | ⏳ geplant |
-| PST-Import | ⏳ geplant |
-| KI-Analyse | ⏳ geplant |
+| System Health Check | fertig |
+| Ordner scannen & parsen (.txt, .pdf, .docx, .eml) | fertig |
+| Dokument in Neo4j speichern (ID-basiert) | fertig |
+| KI-Provider-Auswahl (Ollama / DNAbot) | Frontend fertig, Backend teilweise |
+| Quellenverwaltung inklusive PST-Pfadvalidierung | umgesetzt |
+| PST-Import mit ImportRun-Anzeige | umgesetzt |
+| Themenextraktion (NLP) | geplant |
+| KI-Analyse mit Graph-Persistenz | teilweise |
 
 ---
 

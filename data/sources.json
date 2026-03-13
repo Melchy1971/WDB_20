@@ -6,13 +6,6 @@
       "label": "Ebanf",
       "source_path": "H:\\daten",
       "created_at": "2026-03-12T14:20:09.808108+00:00"
-    },
-    {
-      "source_id": "8aa4aa4a-04e1-4b28-b710-133eedc1c0a6",
-      "source_type": "PST",
-      "label": "PST Datei",
-      "source_path": "H:\\daten\\backup.pst",
-      "created_at": "2026-03-12T14:28:18.710220+00:00"
     }
   ],
   "selected_source_id": null

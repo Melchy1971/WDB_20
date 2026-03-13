@@ -1,3 +1,5 @@
+from pathlib import Path
+
 from fastapi import APIRouter, HTTPException
 
 from app.models.analysis_models import ScanAnalysisResponse
@@ -9,6 +11,7 @@ from app.models.source_models import (
     SelectSourceRequest,
     SelectSourceResponse,
     Source,
+    UpdateSourcePathRequest,
 )
 from app.models.selection_models import (
     SourceSelectionResponse,
@@ -61,6 +64,12 @@ def create_local_folder_source(request: CreateSourceRequest) -> Source:
 
 @router.post("/pst", response_model=Source)
 def create_pst_source(request: CreatePstSourceRequest) -> Source:
+    pst_path = Path(request.pst_file_path)
+    if not pst_path.is_absolute():
+        raise HTTPException(
+            status_code=422,
+            detail="Für PST-Quellen ist ein absoluter Dateipfad erforderlich.",
+        )
     return source_registry_service.create_pst_source(request)
 
 
@@ -85,9 +94,40 @@ def delete_source(source_id: str) -> Source:
     return source
 
 
+@router.patch("/{source_id}/path", response_model=Source)
+def update_source_path(source_id: str, request: UpdateSourcePathRequest) -> Source:
+    source = source_registry_service.get_source(source_id)
+    if source is None:
+        raise HTTPException(status_code=404, detail=f"Quelle nicht gefunden: {source_id}")
+
+    source_path = request.source_path.strip()
+    if source.source_type == "PST" and not Path(source_path).is_absolute():
+        raise HTTPException(
+            status_code=422,
+            detail="Für PST-Quellen ist ein absoluter Dateipfad erforderlich.",
+        )
+
+    try:
+        return source_registry_service.update_source_path(source_id, source_path)
+    except KeyError:
+        raise HTTPException(status_code=404, detail=f"Quelle nicht gefunden: {source_id}")
+
+
 
 @router.post("/select", response_model=SelectSourceResponse)
 def select_source(request: SelectSourceRequest) -> SelectSourceResponse:
+    source = source_registry_service.get_source(request.source_id)
+    if source is None:
+        raise HTTPException(
+            status_code=404,
+            detail=f"Quelle nicht gefunden: {request.source_id}",
+        )
+    if source.source_type == "PST" and not Path(source.source_path).is_absolute():
+        raise HTTPException(
+            status_code=422,
+            detail="PST-Quelle kann nicht aktiviert werden: absoluter Dateipfad fehlt.",
+        )
+
     try:
         source = source_registry_service.select_source(request.source_id)
     except KeyError:

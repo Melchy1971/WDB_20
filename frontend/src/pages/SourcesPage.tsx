@@ -1,14 +1,21 @@
-import { useEffect, useRef, useState } from "react";
-import { createPstSource, createSource, listSources, deleteSource } from "../api/sourcesApi";
+﻿import { useEffect, useRef, useState } from "react";
+import {
+  createPstSource,
+  createSource,
+  deleteSource,
+  listSources,
+  updateSourcePath,
+} from "../api/sourcesApi";
 import { StatusBanner } from "../components/status/StatusBanner";
 import type { Source, SourceType } from "../types/source";
 
 type LoadState = "loading" | "ready" | "error";
 type CreateState = "idle" | "saving" | "error";
+type EditState = "idle" | "saving" | "error";
 
 type Props = {
   selectedSourceId: string | null;
-  onSelectSource: (sourceId: string, sourceType: string) => void;
+  onSelectSource: (sourceId: string, sourceType: string) => Promise<void>;
   onContinueToScan: () => void;
   onContinueToPstTree: () => void;
 };
@@ -25,7 +32,7 @@ const PATH_LABELS: Record<SourceType, { label: string; placeholder: string }> = 
   },
   PST: {
     label: "PST-Dateipfad",
-    placeholder: "z. B. /data/archive/postfach.pst",
+    placeholder: "z. B. C:\\Daten\\Archive\\postfach.pst",
   },
 };
 
@@ -33,6 +40,19 @@ const PICKER_BADGE_LABELS: Record<SourceType, string> = {
   LOCAL_FOLDER: "Ordner gewählt",
   PST: "PST gewählt",
 };
+
+function isLikelyAbsolutePath(value: string): boolean {
+  const normalized = value.trim();
+  if (!normalized) {
+    return false;
+  }
+
+  return /^[A-Za-z]:[\\/]/.test(normalized) || normalized.startsWith("/") || normalized.startsWith("\\\\");
+}
+
+function isInvalidPstSource(source: Source): boolean {
+  return source.source_type === "PST" && !isLikelyAbsolutePath(source.source_path);
+}
 
 export function SourcesPage({ selectedSourceId, onSelectSource, onContinueToScan, onContinueToPstTree }: Props) {
   const [sources, setSources] = useState<Source[]>([]);
@@ -46,6 +66,12 @@ export function SourcesPage({ selectedSourceId, onSelectSource, onContinueToScan
   const [pathPickerHint, setPathPickerHint] = useState<string | null>(null);
   const [createState, setCreateState] = useState<CreateState>("idle");
   const [createError, setCreateError] = useState<string | null>(null);
+
+  const [editingSourceId, setEditingSourceId] = useState<string | null>(null);
+  const [editingPath, setEditingPath] = useState("");
+  const [editState, setEditState] = useState<EditState>("idle");
+  const [editError, setEditError] = useState<string | null>(null);
+
   const folderInputRef = useRef<HTMLInputElement | null>(null);
   const pstInputRef = useRef<HTMLInputElement | null>(null);
 
@@ -123,7 +149,7 @@ export function SourcesPage({ selectedSourceId, onSelectSource, onContinueToScan
   function tryExtractFilePath(file: File): string | null {
     const fileWithPath = file as File & { path?: string };
     const absoluteCandidate = fileWithPath.path;
-    if (absoluteCandidate && absoluteCandidate.trim()) {
+    if (absoluteCandidate && isLikelyAbsolutePath(absoluteCandidate)) {
       return absoluteCandidate;
     }
     if (file.name && file.name.trim()) {
@@ -141,6 +167,8 @@ export function SourcesPage({ selectedSourceId, onSelectSource, onContinueToScan
     const pickedFile = files[0];
     const extractedPath = tryExtractFilePath(pickedFile);
     if (!extractedPath) {
+      setPath("");
+      setPathLocked(false);
       setPathPickerHint(
         "PST-Datei wurde ausgewählt, aber der Browser liefert keinen nutzbaren Pfad. Bitte Pfad manuell eintragen."
       );
@@ -148,12 +176,13 @@ export function SourcesPage({ selectedSourceId, onSelectSource, onContinueToScan
     }
 
     setPath(extractedPath);
-    setPathLocked(true);
-    if (extractedPath.includes("/") || extractedPath.includes("\\")) {
+    if (isLikelyAbsolutePath(extractedPath)) {
+      setPathLocked(true);
       setPathPickerHint(null);
     } else {
+      setPathLocked(false);
       setPathPickerHint(
-        "Dateiname übernommen. Falls nötig, ergänzen Sie den vollständigen absoluten Dateipfad zur .pst-Datei."
+        "Der Browser liefert nur den Dateinamen. Bitte den vollständigen absoluten Pfad zur .pst-Datei eintragen."
       );
     }
   }
@@ -171,13 +200,58 @@ export function SourcesPage({ selectedSourceId, onSelectSource, onContinueToScan
       return;
     }
 
-    if (sourceType === "PST") {
-      handleOpenPstPicker();
+    handleOpenPstPicker();
+  }
+
+  function startEditing(source: Source): void {
+    setEditingSourceId(source.source_id);
+    setEditingPath(source.source_path);
+    setEditState("idle");
+    setEditError(null);
+    setCreateError(null);
+  }
+
+  function cancelEditing(): void {
+    setEditingSourceId(null);
+    setEditingPath("");
+    setEditState("idle");
+    setEditError(null);
+  }
+
+  async function handleSaveSourcePath(source: Source): Promise<void> {
+    const trimmedPath = editingPath.trim();
+    if (!trimmedPath) {
+      setEditState("error");
+      setEditError("Pfad darf nicht leer sein.");
+      return;
+    }
+
+    if (source.source_type === "PST" && !isLikelyAbsolutePath(trimmedPath)) {
+      setEditState("error");
+      setEditError("Für PST-Quellen ist ein vollständiger absoluter Dateipfad erforderlich.");
+      return;
+    }
+
+    setEditState("saving");
+    setEditError(null);
+    try {
+      const updated = await updateSourcePath(source.source_id, { source_path: trimmedPath });
+      setSources((prev) => prev.map((entry) => (entry.source_id === updated.source_id ? updated : entry)));
+      cancelEditing();
+    } catch (err) {
+      setEditState("error");
+      setEditError(err instanceof Error ? err.message : "Pfad konnte nicht gespeichert werden.");
     }
   }
 
   async function handleCreate(e: React.FormEvent): Promise<void> {
     e.preventDefault();
+    if (sourceType === "PST" && !isLikelyAbsolutePath(path)) {
+      setCreateState("error");
+      setCreateError("Für PST-Quellen ist ein vollständiger absoluter Dateipfad erforderlich.");
+      return;
+    }
+
     setCreateState("saving");
     setCreateError(null);
     try {
@@ -204,6 +278,7 @@ export function SourcesPage({ selectedSourceId, onSelectSource, onContinueToScan
   }
 
   const pathMeta = PATH_LABELS[sourceType];
+  const isPstPathValid = sourceType !== "PST" || isLikelyAbsolutePath(path);
 
   return (
     <div className="page">
@@ -243,9 +318,7 @@ export function SourcesPage({ selectedSourceId, onSelectSource, onContinueToScan
 
         <label className="label" htmlFor="source-path">
           {pathMeta.label}
-          {pathLocked && (
-            <span className="picker-selected-badge">{PICKER_BADGE_LABELS[sourceType]}</span>
-          )}
+          {pathLocked && <span className="picker-selected-badge">{PICKER_BADGE_LABELS[sourceType]}</span>}
         </label>
         {sourceType === "LOCAL_FOLDER" && (
           <>
@@ -312,26 +385,18 @@ export function SourcesPage({ selectedSourceId, onSelectSource, onContinueToScan
         )}
 
         {pathPickerHint && <p className="hint">{pathPickerHint}</p>}
-
-        {createError && (
-          <p className="status-message error">{createError}</p>
-        )}
+        {createError && <p className="status-message error">{createError}</p>}
         <button
           type="submit"
           className="action-button"
-          disabled={createState === "saving" || !label.trim() || !path.trim()}
+          disabled={createState === "saving" || !label.trim() || !path.trim() || !isPstPathValid}
         >
           {createState === "saving" ? "Speichern ..." : "Quelle anlegen"}
         </button>
       </form>
 
-      {loadState === "loading" && (
-        <p className="status-message pending">Quellen werden geladen ...</p>
-      )}
-
-      {loadState === "error" && loadError && (
-        <StatusBanner message={loadError} variant="error" />
-      )}
+      {loadState === "loading" && <p className="status-message pending">Quellen werden geladen ...</p>}
+      {loadState === "error" && loadError && <StatusBanner message={loadError} variant="error" />}
 
       {loadState === "ready" && (
         <div className="panel">
@@ -342,57 +407,130 @@ export function SourcesPage({ selectedSourceId, onSelectSource, onContinueToScan
             <div className="source-list">
               {sources.map((source) => {
                 const isActive = selectedSourceId === source.source_id;
+                const isEditing = editingSourceId === source.source_id;
+                const isInvalidPst = isInvalidPstSource(source);
+                const canActivate = !isInvalidPst;
+                const primaryButtonLabel = source.source_type === "PST"
+                  ? (isActive ? "Zur PST-Struktur" : "Aktivieren + PST-Struktur")
+                  : (isActive ? "Zum Scan" : "Aktivieren + Scan");
+
                 return (
                   <div
                     key={source.source_id}
-                    className={`source-item${isActive ? " source-item--active" : ""}`}
+                    className={`source-item${isActive ? " source-item--active" : ""}${isInvalidPst ? " source-item--invalid" : ""}`}
                   >
                     <div className="source-item__info">
-                      <span className="source-item__label">{source.label}</span>
-                      <span className="source-item__path">{source.source_path}</span>
-                      <span className="source-item__type">
-                        {SOURCE_TYPE_LABELS[source.source_type]}
-                      </span>
+                      <div className="source-item__header">
+                        <span className="source-item__label">{source.label}</span>
+                        {isInvalidPst && <span className="source-warning-badge">Ungültiger PST-Pfad</span>}
+                      </div>
+
+                      {isEditing ? (
+                        <>
+                          <input
+                            className="text-input source-item__path-input"
+                            type="text"
+                            value={editingPath}
+                            onChange={(e) => setEditingPath(e.target.value)}
+                            placeholder={PATH_LABELS[source.source_type].placeholder}
+                          />
+                          {editError && <p className="status-message error">{editError}</p>}
+                        </>
+                      ) : (
+                        <span className="source-item__path">{source.source_path}</span>
+                      )}
+
+                      <span className="source-item__type">{SOURCE_TYPE_LABELS[source.source_type]}</span>
+                      {isInvalidPst && (
+                        <p className="source-item__warning">
+                          Diese PST-Quelle hat keinen absoluten Dateipfad. Bearbeiten Sie den Pfad, bevor Sie sie aktivieren.
+                        </p>
+                      )}
                     </div>
+
                     <div className="source-item__actions">
-                      <button
-                        type="button"
-                        className="action-button action-button--secondary"
-                        onClick={() => onSelectSource(source.source_id, source.source_type)}
-                        disabled={isActive}
-                      >
-                        {isActive ? "Aktiv" : "Aktivieren"}
-                      </button>
-                      <button
-                        type="button"
-                        className="action-button"
-                        onClick={() => {
-                          onSelectSource(source.source_id, source.source_type);
-                          if (source.source_type === "PST") {
-                            onContinueToPstTree();
-                          } else {
-                            onContinueToScan();
-                          }
-                        }}
-                      >
-                        {source.source_type === "PST"
-                          ? (isActive ? "Zum PST-Import" : "Aktivieren + PST-Import")
-                          : (isActive ? "Zum Scan" : "Aktivieren + Scan")}
-                      </button>
-                        <button
-                          type="button"
-                          className="action-button action-button--danger"
-                          onClick={async () => {
-                            try {
-                              await deleteSource(source.source_id);
-                              setSources((prev) => prev.filter((s) => s.source_id !== source.source_id));
-                            } catch (err) {
-                              alert("Quelle konnte nicht entfernt werden.");
-                            }
-                          }}
-                        >
-                          Entfernen
-                        </button>
+                      {isEditing ? (
+                        <>
+                          <button
+                            type="button"
+                            className="action-button"
+                            onClick={() => void handleSaveSourcePath(source)}
+                            disabled={editState === "saving"}
+                          >
+                            {editState === "saving" ? "Speichern ..." : "Pfad speichern"}
+                          </button>
+                          <button
+                            type="button"
+                            className="action-button action-button--secondary"
+                            onClick={cancelEditing}
+                            disabled={editState === "saving"}
+                          >
+                            Abbrechen
+                          </button>
+                        </>
+                      ) : (
+                        <>
+                          <button
+                            type="button"
+                            className="action-button action-button--secondary"
+                            onClick={async () => {
+                              try {
+                                await onSelectSource(source.source_id, source.source_type);
+                              } catch (err) {
+                                setCreateError(err instanceof Error ? err.message : "Quelle konnte nicht aktiviert werden.");
+                              }
+                            }}
+                            disabled={isActive || !canActivate}
+                            title={!canActivate ? "PST-Pfad zuerst korrigieren" : undefined}
+                          >
+                            {isActive ? "Aktiv" : "Aktivieren"}
+                          </button>
+                          <button
+                            type="button"
+                            className="action-button"
+                            onClick={async () => {
+                              try {
+                                await onSelectSource(source.source_id, source.source_type);
+                                if (source.source_type === "PST") {
+                                  onContinueToPstTree();
+                                } else {
+                                  onContinueToScan();
+                                }
+                              } catch (err) {
+                                setCreateError(err instanceof Error ? err.message : "Quelle konnte nicht aktiviert werden.");
+                              }
+                            }}
+                            disabled={!canActivate}
+                            title={!canActivate ? "PST-Pfad zuerst korrigieren" : undefined}
+                          >
+                            {primaryButtonLabel}
+                          </button>
+                          <button
+                            type="button"
+                            className="action-button action-button--secondary"
+                            onClick={() => startEditing(source)}
+                          >
+                            Bearbeiten
+                          </button>
+                          <button
+                            type="button"
+                            className="action-button action-button--danger"
+                            onClick={async () => {
+                              try {
+                                await deleteSource(source.source_id);
+                                setSources((prev) => prev.filter((s) => s.source_id !== source.source_id));
+                                if (editingSourceId === source.source_id) {
+                                  cancelEditing();
+                                }
+                              } catch {
+                                alert("Quelle konnte nicht entfernt werden.");
+                              }
+                            }}
+                          >
+                            Entfernen
+                          </button>
+                        </>
+                      )}
                     </div>
                   </div>
                 );

@@ -10,7 +10,7 @@ import { PstImportPreviewPage } from "./pages/PstImportPreviewPage";
 import { PstImportRunPage } from "./pages/PstImportRunPage";
 import { AnalysisPage } from "./pages/AnalysisPage";
 import { KiSettingsPage } from "./pages/KiSettingsPage";
-import { getSelectedSource } from "./api/sourcesApi";
+import { getSelectedSource, selectSource } from "./api/sourcesApi";
 import type { AppPage } from "./types/navigation";
 import "./index.css";
 
@@ -31,7 +31,8 @@ function App() {
       .catch(() => {});
   }, []);
 
-  function handleSelectSource(sourceId: string, sourceType: string) {
+  async function handleSelectSource(sourceId: string, sourceType: string) {
+    await selectSource(sourceId);
     setSelectedSourceId(sourceId);
     setSelectedSourceType(sourceType);
   }
@@ -48,7 +49,7 @@ function App() {
             selectedSourceId={selectedSourceId}
             onSelectSource={handleSelectSource}
             onContinueToScan={() => setActivePage("folder-scan")}
-            onContinueToPstImport={() => setActivePage("pst-import-preview")}
+            onContinueToPstTree={() => setActivePage("pst-tree")}
           />
         );
       case "topics-review":

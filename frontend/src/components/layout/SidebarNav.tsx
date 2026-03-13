@@ -14,16 +14,19 @@ const ACTIVE_ITEMS: NavItem[] = [
   { page: "system-status", label: "System Status" },
   { page: "folder-scan",   label: "Dokumentscan" },
   { page: "ki-settings",   label: "KI-Einstellungen" },
+  { page: "sources",       label: "Quellenverwaltung" },
 ];
 
-const FUTURE_ITEMS: NavItem[] = [
-  { page: "sources",             label: "Quellenverwaltung" },
+const PST_ITEMS: NavItem[] = [
   { page: "pst-tree",            label: "PST-Struktur" },
   { page: "pst-import-preview",  label: "PST-Import-Vorschau" },
   { page: "pst-import-run",      label: "PST-Import Ergebnis" },
-  { page: "topics-review",       label: "Themenreview" },
   { page: "pst-import",          label: "PST-Import" },
-  { page: "analysis",            label: "KI-Analyse" },
+];
+
+const FUTURE_ITEMS: NavItem[] = [
+  { page: "topics-review",  label: "Themenreview" },
+  { page: "analysis",       label: "KI-Analyse" },
 ];
 
 export function SidebarNav({ activePage, onNavigate }: Props) {
@@ -57,6 +60,13 @@ export function SidebarNav({ activePage, onNavigate }: Props) {
         <div className="nav-section-title">Aktiv</div>
         <ul className="nav-list">
           {ACTIVE_ITEMS.map((item) => navButton(item))}
+        </ul>
+      </div>
+
+      <div className="nav-section">
+        <div className="nav-section-title">PST-Datei</div>
+        <ul className="nav-list">
+          {PST_ITEMS.map((item) => navButton(item, true))}
         </ul>
       </div>
 

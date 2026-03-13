@@ -22,6 +22,10 @@ export type CreatePstSourceRequest = {
   pst_file_path: string;
 };
 
+export type UpdateSourcePathRequest = {
+  source_path: string;
+};
+
 /** GET /sources — Response */
 export type ListSourcesResponse = {
   sources: Source[];

@@ -64,6 +64,16 @@ class _SourceRegistry:
     def get_source(self, source_id: str) -> Source | None:
         return self._sources.get(source_id)
 
+    def update_source_path(self, source_id: str, source_path: str) -> Source:
+        source = self._sources.get(source_id)
+        if source is None:
+            raise KeyError(source_id)
+
+        updated = source.model_copy(update={"source_path": source_path})
+        self._sources[source_id] = updated
+        self._save()
+        return updated
+
     def select_source(self, source_id: str) -> Source:
         source = self._sources.get(source_id)
         if source is None:
@@ -99,6 +109,10 @@ def create_pst_source(request: CreatePstSourceRequest) -> Source:
 
 def get_source(source_id: str) -> Source | None:
     return _registry.get_source(source_id)
+
+
+def update_source_path(source_id: str, source_path: str) -> Source:
+    return _registry.update_source_path(source_id, source_path)
 
 
 def select_source(source_id: str) -> Source:

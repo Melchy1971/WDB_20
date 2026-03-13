@@ -32,6 +32,10 @@ class CreatePstSourceRequest(BaseModel):
     )
 
 
+class UpdateSourcePathRequest(BaseModel):
+    source_path: str = Field(..., min_length=1)
+
+
 class ListSourcesResponse(BaseModel):
     sources: list[Source]
 

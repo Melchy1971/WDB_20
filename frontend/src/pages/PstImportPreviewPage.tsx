@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+﻿import { useEffect, useState } from "react";
 import { fetchImportPreview } from "../api/importPreviewApi";
 import { fetchImportJobStatus, startImportJob } from "../api/importJobsApi";
 import { StatusBanner } from "../components/status/StatusBanner";
@@ -10,7 +10,7 @@ type LoadState = "idle" | "loading" | "ready" | "error";
 type JobState = "idle" | "starting" | "ready" | "refreshing" | "error";
 
 const NODE_ICONS: Record<TreeNodeType, string> = {
-  folder: "▶",
+  folder: ">",
   message: "✉",
   attachment: "⊘",
 };
@@ -22,17 +22,17 @@ const NODE_TYPE_LABELS: Record<TreeNodeType, string> = {
 };
 
 const JOB_STATUS_LABELS: Record<JobStatus, string> = {
-  queued:   "In Warteschlange",
-  running:  "Läuft …",
+  queued: "In Warteschlange",
+  running: "Läuft ...",
   finished: "Abgeschlossen",
-  failed:   "Fehlgeschlagen",
+  failed: "Fehlgeschlagen",
 };
 
 const JOB_STATUS_CLASS: Record<JobStatus, string> = {
-  queued:   "pending",
-  running:  "pending",
+  queued: "pending",
+  running: "pending",
   finished: "success",
-  failed:   "error",
+  failed: "error",
 };
 
 type Props = {
@@ -83,9 +83,7 @@ function JobPanel({
         <dd>{job.message}</dd>
       </dl>
 
-      {jobError && (
-        <p className="status-message error">{jobError}</p>
-      )}
+      {jobError && <p className="status-message error">{jobError}</p>}
 
       <div className="action-bar">
         <button
@@ -94,7 +92,7 @@ function JobPanel({
           onClick={onRefresh}
           disabled={jobState === "refreshing"}
         >
-          {jobState === "refreshing" ? "Wird aktualisiert …" : "Status aktualisieren"}
+          {jobState === "refreshing" ? "Wird aktualisiert ..." : "Status aktualisieren"}
         </button>
       </div>
     </div>
@@ -119,9 +117,11 @@ export function PstImportPreviewPage({ selectedSourceId, onOpenImportRun }: Prop
       setJobError(null);
       return;
     }
+
     setLoadState("loading");
     setPreview(null);
     setLoadError(null);
+
     fetchImportPreview(selectedSourceId)
       .then((res) => {
         setPreview(res);
@@ -137,8 +137,10 @@ export function PstImportPreviewPage({ selectedSourceId, onOpenImportRun }: Prop
 
   async function handleStartImport(): Promise<void> {
     if (selectedSourceId === null) return;
+
     setJobState("starting");
     setJobError(null);
+
     try {
       const started = await startImportJob(selectedSourceId);
       setJob(started);
@@ -154,24 +156,26 @@ export function PstImportPreviewPage({ selectedSourceId, onOpenImportRun }: Prop
 
   async function handleRefreshStatus(): Promise<void> {
     if (job === null) return;
+
     setJobState("refreshing");
     setJobError(null);
+
     try {
       const updated = await fetchImportJobStatus(job.job_id);
       setJob(updated);
       setJobState("ready");
     } catch (err) {
       setJobError(err instanceof Error ? err.message : "Fehler beim Abrufen des Job-Status.");
-      setJobState("ready"); // Panel bleibt sichtbar
+      setJobState("ready");
     }
   }
 
-  // Erlaubt Start auch nach fehlgeschlagenem Versuch (jobState === "error"),
-  // damit der Nutzer ohne Seitenreload erneut versuchen kann.
+  const isJobStarting = jobState === "starting";
   const canStartImport =
     loadState === "ready" &&
     preview !== null &&
     preview.status === "ready" &&
+    !isJobStarting &&
     (jobState === "idle" || jobState === "error");
 
   return (
@@ -223,9 +227,9 @@ export function PstImportPreviewPage({ selectedSourceId, onOpenImportRun }: Prop
               type="button"
               className="action-button"
               onClick={handleStartImport}
-              disabled={!canStartImport || jobState === "starting"}
+              disabled={!canStartImport}
             >
-              {jobState === "starting" ? "Import wird gestartet …" : "Import starten"}
+              {isJobStarting ? "Import wird gestartet ..." : "Import starten"}
             </button>
           </div>
         </div>

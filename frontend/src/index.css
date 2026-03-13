@@ -569,11 +569,23 @@ body {
   background: var(--tk-accent-subtle);
 }
 
+.source-item--invalid {
+  border-color: var(--tk-feedback-error-text);
+  background: var(--tk-feedback-error-bg);
+}
+
 .source-item__info {
   display: flex;
   flex-direction: column;
   gap: 0.2rem;
   min-width: 0;
+}
+
+.source-item__header {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
 }
 
 .source-item__label {
@@ -595,10 +607,32 @@ body {
   color: var(--tk-text-hint);
 }
 
+.source-item__path-input {
+  margin-bottom: 0;
+}
+
+.source-item__warning {
+  margin: 0.1rem 0 0;
+  color: var(--tk-feedback-error-text);
+  font-size: var(--tk-font-size-sm);
+}
+
+.source-warning-badge {
+  display: inline-block;
+  padding: 0.1rem 0.45rem;
+  border-radius: var(--tk-radius-sm);
+  border: 1px solid var(--tk-feedback-error-text);
+  background: var(--tk-feedback-error-bg);
+  color: var(--tk-feedback-error-text);
+  font-size: var(--tk-font-size-xs);
+  font-weight: var(--tk-font-weight-semibold);
+}
+
 .source-item__actions {
   display: flex;
   gap: 0.5rem;
   flex-shrink: 0;
+  flex-wrap: wrap;
 }
 
 /* ── Panel actions bar ─────────────────────────────────────── */

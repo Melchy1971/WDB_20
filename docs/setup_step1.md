@@ -1,28 +1,28 @@
-# Setup Schritt 1 (Windows, lokal ohne Docker)
+﻿# Setup Schritt 1 (Windows, lokal ohne Docker)
 
 Diese Anleitung richtet ein lokales Entwicklungs-Setup mit FastAPI im Ordner `backend` und React + Vite im Ordner `frontend` ein.
 
 ## 1) Python installieren
 
-1. Lade Python 3.11+ für Windows herunter und installiere es:
+1. Lade Python 3.11+ fuer Windows herunter und installiere es:
    - https://www.python.org/downloads/windows/
 2. Aktiviere im Installer unbedingt **"Add python.exe to PATH"**.
-3. Prüfe die Installation in PowerShell:
+3. Pruefe die Installation in PowerShell:
 
 ```powershell
 python --version
 ```
 
-## 2) Virtuelle Umgebung für das Backend anlegen
+## 2) Virtuelle Umgebung fuer das Backend anlegen
 
-Im Projekt-Root ausführen:
+Im Projekt-Root ausfuehren:
 
 ```powershell
 cd .\mail-knowledge-platform
 python -m venv .\backend\.venv
 ```
 
-## 3) Backend-Abhängigkeiten installieren
+## 3) Backend-Abhaengigkeiten installieren
 
 ```powershell
 .\backend\.venv\Scripts\Activate.ps1
@@ -34,7 +34,7 @@ pip install -r .\backend\requirements.txt
 
 1. Lade die aktuelle LTS-Version herunter und installiere sie:
    - https://nodejs.org/
-2. Prüfe die Installation in PowerShell:
+2. Pruefe die Installation in PowerShell:
 
 ```powershell
 node --version
@@ -51,7 +51,7 @@ cd ..
 
 ## 6) `.env.example` nach `.env` kopieren
 
-Falls noch keine `.env` existiert, im Projekt-Root ausführen:
+Falls noch keine `.env` existiert, im Projekt-Root ausfuehren:
 
 ```powershell
 Copy-Item .\.env.example .\.env
@@ -65,7 +65,7 @@ Im Projekt-Root:
 .\scripts\start_backend.ps1
 ```
 
-Backend läuft danach auf `http://127.0.0.1:8000`.
+Backend laeuft danach auf `http://127.0.0.1:8000`.
 
 ## 8) Frontend starten
 
@@ -75,9 +75,9 @@ In einer **zweiten** PowerShell im Projekt-Root:
 .\scripts\start_frontend.ps1
 ```
 
-Frontend läuft standardmäßig auf `http://127.0.0.1:5173`.
+Frontend laeuft standardmaessig auf `http://127.0.0.1:5173`.
 
-## 9) Health-Check prüfen
+## 9) Health-Check pruefen
 
 In einer dritten PowerShell:
 
