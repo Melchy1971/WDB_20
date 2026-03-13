@@ -21,6 +21,12 @@ class _ScanStore:
             return None
         return scan.get(document_id)
 
+    def list_documents(self, scan_id: str) -> list[ParsedDocument]:
+        scan = self._scans.get(scan_id)
+        if scan is None:
+            return []
+        return list(scan.values())
+
     def clear(self) -> None:
         self._scans.clear()
 
@@ -38,6 +44,10 @@ def put(scan_id: str, document: ParsedDocument) -> None:
 
 def get(scan_id: str, document_id: str) -> ParsedDocument | None:
     return _store.get(scan_id, document_id)
+
+
+def list_documents(scan_id: str) -> list[ParsedDocument]:
+    return _store.list_documents(scan_id)
 
 
 def clear() -> None:

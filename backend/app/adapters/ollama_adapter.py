@@ -72,6 +72,51 @@ class OllamaAdapter:
             f"E-Mails: {json.dumps(emails_payload, ensure_ascii=False)}"
         )
 
+
+    def analyze_documents(self, scan_id: str, documents: list) -> list:
+        from app.models.analysis_models import DocumentAnalysisResult
+        prompt = self._build_documents_prompt(scan_id, documents)
+        payload = {"model": self.model, "prompt": prompt, "stream": False}
+        response = httpx.post(f"{self.base_url}/api/generate", json=payload, timeout=300.0)
+        response.raise_for_status()
+        body = response.json()
+        text = str(body.get("response", "")).strip()
+        if not text:
+            raise RuntimeError("Ollama lieferte keine Analyseantwort.")
+        parsed = self._parse_results(text)
+        return [DocumentAnalysisResult.model_validate(item) for item in parsed]
+
+    def _build_documents_prompt(self, scan_id: str, documents: list) -> str:
+        docs_payload = [
+            {
+                "document_id": d.document_id,
+                "file_name": d.file_name,
+                "text_content": d.text_content[:2000],
+            }
+            for d in documents
+        ]
+        schema = {
+            "results": [
+                {
+                    "document_id": "string",
+                    "file_name": "string",
+                    "topic_label": "string",
+                    "summary": "string",
+                    "keywords": ["string"],
+                    "entities": ["string"],
+                    "priority": "low|medium|high",
+                    "confidence": 0.0,
+                }
+            ]
+        }
+        return (
+            "Analysiere die folgenden Dokumente und liefere NUR valides JSON im exakt angegebenen Schema. "
+            "Keine Markdown-Ausgabe, kein erklaerende Text. "
+            f"Scan-ID: {scan_id}. "
+            f"Schema: {json.dumps(schema, ensure_ascii=False)}. "
+            f"Dokumente: {json.dumps(docs_payload, ensure_ascii=False)}"
+        )
+
     def _parse_results(self, text: str) -> list[dict]:
         normalized = text.strip()
         if normalized.startswith("```"):
@@ -89,3 +134,33 @@ class OllamaAdapter:
         if isinstance(decoded, list):
             return decoded
         raise RuntimeError("Ollama-Antwort enthält kein gültiges Ergebnisarray.")
+
+
+# ── Dokument-Analyse ──────────────────────────────────────────────────────────
+
+    def analyze_documents(self, scan_id: str, documents: list) -> list:
+        from app.models.analysis_models import DocumentAnalysisResult
+        prompt = self._build_documents_prompt(scan_id, documents)
+        payload = {"model": self.model, "prompt": prompt, "stream": False}
+        response = httpx.post(f"{self.base_url}/api/generate", json=payload, timeout=300.0)
+        response.raise_for_status()
+        body = response.json()
+        text = str(body.get("response", "")).strip()
+        if not text:
+            raise RuntimeError("Ollama lieferte keine Analyseantwort.")
+        parsed = self._parse_results(text)
+        return [DocumentAnalysisResult.model_validate(item) for item in parsed]
+
+    def _build_documents_prompt(self, scan_id: str, documents: list) -> str:
+        docs_payload = [
+            {"document_id": d.document_id, "file_name": d.file_name, "text_content": d.text_content[:2000]}
+            for d in documents
+        ]
+        schema = {"results": [{"document_id": "string", "file_name": "string", "topic_label": "string", "summary": "string", "keywords": ["string"], "entities": ["string"], "priority": "low|medium|high", "confidence": 0.0}]}
+        return (
+            "Analysiere die folgenden Dokumente und liefere NUR valides JSON im exakt angegebenen Schema. "
+            "Keine Markdown-Ausgabe, kein erklaerende Text. "
+            f"Scan-ID: {scan_id}. "
+            f"Schema: {json.dumps(schema, ensure_ascii=False)}. "
+            f"Dokumente: {json.dumps(docs_payload, ensure_ascii=False)}"
+        )

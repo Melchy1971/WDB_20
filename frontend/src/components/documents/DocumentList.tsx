@@ -1,6 +1,7 @@
 import type { DocumentScanItem } from "../../types/document";
 import { DocumentCard } from "./DocumentCard";
 import type { PersistStatus } from "./DocumentCard";
+import type { DocumentAnalysisResult } from "../../types/analysis";
 
 type PersistState = {
   status: PersistStatus;
@@ -10,11 +11,12 @@ type PersistState = {
 type Props = {
   documents: DocumentScanItem[];
   persistStates: Record<string, PersistState>;
+  analysisResults: Record<string, DocumentAnalysisResult>;
   onPersist: (document: DocumentScanItem) => void;
   isScanning: boolean;
 };
 
-export function DocumentList({ documents, persistStates, onPersist, isScanning }: Props) {
+export function DocumentList({ documents, persistStates, analysisResults, onPersist, isScanning }: Props) {
   return (
     <section>
       <h2>Gefundene Dokumente</h2>
@@ -30,6 +32,7 @@ export function DocumentList({ documents, persistStates, onPersist, isScanning }
               document={doc}
               persistStatus={ps.status}
               persistMessage={ps.message}
+              analysisResult={analysisResults[doc.document_id] ?? null}
               onPersist={() => onPersist(doc)}
             />
           );

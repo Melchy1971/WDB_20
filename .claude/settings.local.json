@@ -1,7 +1,11 @@
 {
   "permissions": {
     "allow": [
-      "Bash(pip install:*)"
+      "Bash(pip install:*)",
+      "Bash(ls h:/Cursor/WDB_20-1/backend/.venv/Scripts/python*)",
+      "Bash(.venv/Scripts/uvicorn main:app --reload --host 127.0.0.1 --port 8000)",
+      "Bash(.venv/Scripts/python -m uvicorn main:app --reload --host 127.0.0.1 --port 8000)",
+      "Bash(ls -la /h/Cursor/WDB_20-1/backend/app/*.py)"
     ]
   }
 }

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { AppLayout } from "./components/layout/AppLayout";
 import { SystemStatusPage } from "./pages/SystemStatusPage";
 import { FolderScanPage } from "./pages/FolderScanPage";
@@ -10,26 +10,45 @@ import { PstImportPreviewPage } from "./pages/PstImportPreviewPage";
 import { PstImportRunPage } from "./pages/PstImportRunPage";
 import { AnalysisPage } from "./pages/AnalysisPage";
 import { KiSettingsPage } from "./pages/KiSettingsPage";
+import { getSelectedSource } from "./api/sourcesApi";
 import type { AppPage } from "./types/navigation";
 import "./index.css";
 
 function App() {
   const [activePage, setActivePage] = useState<AppPage>("system-status");
   const [selectedSourceId, setSelectedSourceId] = useState<string | null>(null);
+  const [selectedSourceType, setSelectedSourceType] = useState<string | null>(null);
   const [selectedImportRunId, setSelectedImportRunId] = useState<string | null>(null);
+
+  useEffect(() => {
+    getSelectedSource()
+      .then((res) => {
+        if (res) {
+          setSelectedSourceId(res.selected_source_id);
+          setSelectedSourceType(res.source_type);
+        }
+      })
+      .catch(() => {});
+  }, []);
+
+  function handleSelectSource(sourceId: string, sourceType: string) {
+    setSelectedSourceId(sourceId);
+    setSelectedSourceType(sourceType);
+  }
 
   function renderPage(page: AppPage) {
     switch (page) {
       case "system-status":
         return <SystemStatusPage />;
       case "folder-scan":
-        return <FolderScanPage selectedSourceId={selectedSourceId} />;
+        return <FolderScanPage selectedSourceId={selectedSourceId} selectedSourceType={selectedSourceType} onNavigateToPstImport={() => setActivePage('pst-import-preview')} />;
       case "sources":
         return (
           <SourcesPage
             selectedSourceId={selectedSourceId}
-            onSelectSource={setSelectedSourceId}
+            onSelectSource={handleSelectSource}
             onContinueToScan={() => setActivePage("folder-scan")}
+            onContinueToPstImport={() => setActivePage("pst-import-preview")}
           />
         );
       case "topics-review":

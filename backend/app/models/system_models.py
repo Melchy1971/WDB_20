@@ -6,3 +6,4 @@ class HealthResponse(BaseModel):
     neo4j_status: str
     ollama_status: str
     environment: str
+    document_count: int = 0

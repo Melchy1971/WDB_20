@@ -7,9 +7,14 @@ import type {
   Source,
 } from "../types/source";
 import type { SourceTreeResponse } from "../types/tree";
+import type { ScanAnalysisResponse } from "../types/analysis";
 
 export function listSources(): Promise<Source[]> {
   return apiGet<ListSourcesResponse>("/sources").then((res) => res.sources);
+}
+
+export function getSelectedSource(): Promise<{ selected_source_id: string; source_type: string } | null> {
+  return apiGet<{ selected_source_id: string; source_type: string } | null>("/sources/selected");
 }
 
 export function createSource(request: CreateSourceRequest): Promise<Source> {
@@ -30,4 +35,8 @@ export function fetchSourceTree(sourceId: string): Promise<SourceTreeResponse> {
 
 export function deleteSource(sourceId: string): Promise<Source> {
   return apiDelete<Source>(`/sources/${sourceId}`);
+}
+
+export function analyzeScan(scanId: string): Promise<ScanAnalysisResponse> {
+  return apiPost<object, ScanAnalysisResponse>(`/sources/scan-analysis/${scanId}`, {});
 }

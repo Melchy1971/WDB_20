@@ -15,6 +15,22 @@ class AnalysisResult(BaseModel):
     confidence: float
 
 
+class DocumentAnalysisResult(BaseModel):
+    document_id: str
+    file_name: str
+    topic_label: str
+    summary: str
+    keywords: list[str] = Field(default_factory=list)
+    entities: list[str] = Field(default_factory=list)
+    priority: AnalysisPriority
+    confidence: float
+
+
+class ScanAnalysisResponse(BaseModel):
+    scan_id: str
+    results: list[DocumentAnalysisResult]
+
+
 class ImportRunAnalysisRecord(BaseModel):
     import_run_id: str
     status: AnalysisStatus

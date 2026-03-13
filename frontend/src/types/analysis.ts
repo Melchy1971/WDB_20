@@ -9,6 +9,22 @@ export type AnalysisResult = {
   confidence: number;
 };
 
+export type DocumentAnalysisResult = {
+  document_id: string;
+  file_name: string;
+  topic_label: string;
+  summary: string;
+  keywords: string[];
+  entities: string[];
+  priority: AnalysisPriority;
+  confidence: number;
+};
+
+export type ScanAnalysisResponse = {
+  scan_id: string;
+  results: DocumentAnalysisResult[];
+};
+
 export type StartImportRunAnalysisRequest = Record<string, never>;
 
 export type StartImportRunAnalysisResponse = {

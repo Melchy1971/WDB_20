@@ -40,6 +40,15 @@ class AnalysisProviderService:
         return adapter.analyze_import_run(import_run_id=import_run_id, emails=emails)
 
 
+    def analyze_documents(self, scan_id: str, documents: list) -> list:
+        from app.models.analysis_models import DocumentAnalysisResult
+        provider = self._settings.require_active_provider()
+        adapter = self._providers.get(provider)
+        if adapter is None:
+            raise RuntimeError(f"Unbekannter KI-Provider: {provider}")
+        return adapter.analyze_documents(scan_id=scan_id, documents=documents)
+
+
 _provider_service = AnalysisProviderService()
 
 

@@ -43,6 +43,7 @@ export function SystemStatusPage() {
           <StatusCard label="Neo4j" value={data.neo4j_status} />
           <StatusCard label="Ollama" value={data.ollama_status} />
           <StatusCard label="Environment" value={data.environment} />
+          <StatusCard label="Erfasste Dokumente" value={String(data.document_count)} />
         </div>
       )}
     </div>

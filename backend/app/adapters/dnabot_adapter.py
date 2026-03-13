@@ -72,6 +72,40 @@ class DnaBotAdapter:
             for item in results
         ]
 
+
+    def analyze_documents(self, scan_id: str, documents: list) -> list:
+        from app.models.analysis_models import DocumentAnalysisResult
+        import json as _json
+        docs_payload = [
+            {
+                "document_id": d.document_id,
+                "file_name": d.file_name,
+                "text_content": d.text_content[:2000],
+            }
+            for d in documents
+        ]
+        payload = {
+            "model": self.model,
+            "scan_id": scan_id,
+            "documents": docs_payload,
+        }
+        raw_body = self._post_json("/v1/scan-analysis", payload)
+        body_raw = _json.loads(raw_body)
+        results_raw = body_raw.get("results", [])
+        return [
+            DocumentAnalysisResult(
+                document_id=str(item.get("document_id", "")),
+                file_name=str(item.get("file_name", "")),
+                topic_label=str(item.get("topic_label", "")),
+                summary=str(item.get("summary", "")),
+                keywords=[str(x) for x in item.get("keywords", []) if isinstance(x, str)],
+                entities=[str(x) for x in item.get("entities", []) if isinstance(x, str)],
+                priority=self._normalize_priority(item.get("priority")),
+                confidence=float(item.get("confidence", 0.0)),
+            )
+            for item in results_raw
+        ]
+
     def _post_json(self, path: str, payload: dict[str, Any]) -> str:
         if not self.base_url:
             raise RuntimeError("DNAbot Base-URL ist nicht konfiguriert.")

@@ -8,8 +8,9 @@ type CreateState = "idle" | "saving" | "error";
 
 type Props = {
   selectedSourceId: string | null;
-  onSelectSource: (sourceId: string) => void;
+  onSelectSource: (sourceId: string, sourceType: string) => void;
   onContinueToScan: () => void;
+  onContinueToPstTree: () => void;
 };
 
 const SOURCE_TYPE_LABELS: Record<SourceType, string> = {
@@ -33,7 +34,7 @@ const PICKER_BADGE_LABELS: Record<SourceType, string> = {
   PST: "PST gewählt",
 };
 
-export function SourcesPage({ selectedSourceId, onSelectSource, onContinueToScan }: Props) {
+export function SourcesPage({ selectedSourceId, onSelectSource, onContinueToScan, onContinueToPstTree }: Props) {
   const [sources, setSources] = useState<Source[]>([]);
   const [loadState, setLoadState] = useState<LoadState>("loading");
   const [loadError, setLoadError] = useState<string | null>(null);
@@ -357,7 +358,7 @@ export function SourcesPage({ selectedSourceId, onSelectSource, onContinueToScan
                       <button
                         type="button"
                         className="action-button action-button--secondary"
-                        onClick={() => onSelectSource(source.source_id)}
+                        onClick={() => onSelectSource(source.source_id, source.source_type)}
                         disabled={isActive}
                       >
                         {isActive ? "Aktiv" : "Aktivieren"}
@@ -366,11 +367,17 @@ export function SourcesPage({ selectedSourceId, onSelectSource, onContinueToScan
                         type="button"
                         className="action-button"
                         onClick={() => {
-                          onSelectSource(source.source_id);
-                          onContinueToScan();
+                          onSelectSource(source.source_id, source.source_type);
+                          if (source.source_type === "PST") {
+                            onContinueToPstTree();
+                          } else {
+                            onContinueToScan();
+                          }
                         }}
                       >
-                        {isActive ? "Zum Scan" : "Aktivieren + Scan"}
+                        {source.source_type === "PST"
+                          ? (isActive ? "Zum PST-Import" : "Aktivieren + PST-Import")
+                          : (isActive ? "Zum Scan" : "Aktivieren + Scan")}
                       </button>
                         <button
                           type="button"

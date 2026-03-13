@@ -1,5 +1,6 @@
 from fastapi import APIRouter, HTTPException
 
+from app.models.analysis_models import ScanAnalysisResponse
 from app.models.document_models import DocumentScanResponse
 from app.models.source_models import (
     CreatePstSourceRequest,
@@ -17,6 +18,9 @@ from app.models.selection_models import (
 from app.models.import_models import ImportPreviewResponse
 from app.models.tree_models import SourceTreeResponse
 from app.services import import_preview_service
+from app.services import scan_store_service
+from app.services.analysis_provider_service import get_analysis_provider_service
+from app.services.settings_service import NoActiveAiProviderError
 from app.services import source_registry_service
 from app.services import source_selection_service
 from app.services.pst_parser_service import PstParserService
@@ -60,6 +64,17 @@ def create_pst_source(request: CreatePstSourceRequest) -> Source:
     return source_registry_service.create_pst_source(request)
 
 
+@router.get("/selected", response_model=SelectSourceResponse | None)
+def get_selected_source() -> SelectSourceResponse | None:
+    source_id = source_registry_service.get_selected_source_id()
+    if source_id is None:
+        return None
+    source = source_registry_service.get_source(source_id)
+    if source is None:
+        return None
+    return SelectSourceResponse(selected_source_id=source.source_id, source_type=source.source_type)
+
+
 # Quelle entfernen
 @router.delete("/{source_id}", response_model=Source)
 def delete_source(source_id: str) -> Source:
@@ -68,6 +83,7 @@ def delete_source(source_id: str) -> Source:
         raise HTTPException(status_code=404, detail=f"Quelle nicht gefunden: {source_id}")
     source_registry_service.delete_source(source_id)
     return source
+
 
 
 @router.post("/select", response_model=SelectSourceResponse)
@@ -183,3 +199,19 @@ def scan_source(source_id: str) -> DocumentScanResponse:
         status_code=400,
         detail=f"Scan für SourceType '{source.source_type}' nicht unterstützt.",
     )
+
+@router.post("/scan-analysis/{scan_id}", response_model=ScanAnalysisResponse)
+def analyze_scan(scan_id: str) -> ScanAnalysisResponse:
+    documents = scan_store_service.list_documents(scan_id)
+    if not documents:
+        raise HTTPException(status_code=404, detail=f"Scan nicht gefunden oder keine Dokumente: {scan_id}")
+    parsed_docs = [d for d in documents if d.parse_status == "parsed"]
+    if not parsed_docs:
+        raise HTTPException(status_code=422, detail="Keine erfolgreich geparsten Dokumente im Scan.")
+    try:
+        results = get_analysis_provider_service().analyze_documents(scan_id=scan_id, documents=parsed_docs)
+    except NoActiveAiProviderError as exc:
+        raise HTTPException(status_code=503, detail=str(exc)) from exc
+    except Exception as exc:
+        raise HTTPException(status_code=500, detail=f"KI-Analyse fehlgeschlagen: {exc}") from exc
+    return ScanAnalysisResponse(scan_id=scan_id, results=results)
