@@ -18,10 +18,7 @@ const ACTIVE_ITEMS: NavItem[] = [
 ];
 
 const PST_ITEMS: NavItem[] = [
-  { page: "pst-import", label: "PST-Scan & Import" },
-  { page: "pst-tree", label: "PST-Struktur" },
-  { page: "pst-import-preview", label: "PST-Import-Vorschau" },
-  { page: "pst-import-run", label: "PST-Import Ergebnis" },
+
 ];
 
 const FUTURE_ITEMS: NavItem[] = [

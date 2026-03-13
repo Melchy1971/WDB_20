@@ -130,20 +130,10 @@ Nicht 1:1 uebernommen:
 - [ ] Source-Validierung um Existenzpruefungen und ggf. lesbaren Zugriff erweitern
 
 ### Frontend
-- [ ] Analysis View fuer ImportRun-Ergebnisse ausbauen
-- [ ] Settings Page fuer Provider-Umschaltung vervollstaendigen
-- [ ] Graph-Visualisierung fuer freigegebene Beziehungen vorbereiten
 - [ ] Quellenverwaltung um bessere Inline-Validierung und UX fuer lokale Pfade erweitern
 
-## 10. Neo4j-Datenmodell
-
-### Aktuell / Rohdaten
 - `RawImportRun`
 - `RawImportedEmail`
-- `RawImportedAttachment`
-- `Document`
-
-### Geplant / Enrichment
 - `SourceSystem`
 - `Folder`
 - `Email`
@@ -156,10 +146,8 @@ Nicht 1:1 uebernommen:
 
 ## 11. Ergebnisdefinition naechster belastbarer Stand
 Der naechste belastbare Projektstand ist erreicht, wenn:
-- PST- und lokale Quellen stabil verwaltet werden
-- Import- und Analyse-Status Neustarts ueberleben
-- Analyseergebnisse getrennt von Rohdaten in Neo4j geschrieben werden
-- Frontend nur ueber Backend-APIs arbeitet
 - keine direkte Kopplung Frontend <-> Neo4j existiert
 - keine direkte Kopplung Frontend <-> Ollama existiert
 - Review und Freigabe fachlicher Ergebnisse nachvollziehbar moeglich sind
+
+- `Entity`
