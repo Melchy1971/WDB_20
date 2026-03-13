@@ -1,11 +1,11 @@
-export type SourceType = "LOCAL_FOLDER" | "PST";
+export type SourceType = "LOCAL_FOLDER";
 
 /** Eine registrierte Dokumentquelle — vom Backend verwaltet. */
 export type Source = {
   source_id: string;
   source_type: SourceType;
   label: string;
-  source_path: string; // Ordnerpfad für LOCAL_FOLDER; .pst-Dateipfad für PST
+  source_path: string; // Ordnerpfad für LOCAL_FOLDER
   created_at: string;
 };
 
@@ -14,12 +14,6 @@ export type CreateSourceRequest = {
   source_type: SourceType;
   label: string;
   source_path: string;
-};
-
-/** POST /sources/pst — PST */
-export type CreatePstSourceRequest = {
-  label: string;
-  pst_file_path: string;
 };
 
 export type UpdateSourcePathRequest = {

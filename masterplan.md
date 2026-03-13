@@ -74,18 +74,10 @@ Aktuell bzw. fachlich vorgesehen:
 ### Source Management
 - [x] Registry fuer Quellen in `data/sources.json`
 - [x] UI fuer Auflistung, Hinzufuegen und Aktivieren von Quellen
-- [x] Validierung absoluter PST-Pfade beim Anlegen
-- [x] Ungueltige PST-Quellen werden im UI markiert
-- [x] Aktivierung ungueltiger PST-Quellen ist im Frontend und Backend blockiert
 - [x] Bearbeiten gespeicherter Source-Pfade implementiert
 
 ### PST Ingestion Pipeline
-- [x] PST-Strukturscan ohne Inhaltsladen (`pst_parser_service`)
-- [x] Auswahl spezifischer Unterordner fuer den Import
-- [x] Import-Job fuer Extraktion von E-Mails und Attachments
-- [x] ImportRun-Ergebnisansicht mit Polling bis Abschluss
-- [x] Neo4j-Rohpersistenz fuer ImportRun, E-Mails und Attachments
-- [x] Anzeige von E-Mail-Body und Attachment-Metadaten im ImportRun-Ergebnis
+- [ ] PST-Pipeline zur Neuentwicklung zurückgesetzt (Code entfernt).
 
 ### Document Scanning (Local)
 - [x] Rekursives Scannen lokaler Ordner
@@ -134,7 +126,6 @@ Nicht 1:1 uebernommen:
 ### Backend
 - [ ] `analysis_service.py`: Persistenzschritt fuer Analyseergebnisse nach Neo4j implementieren
 - [ ] `settings_service.py`: Provider-Einstellung dauerhaft speichern
-- [ ] `pst_import_service.py`: Performance fuer grosse PST-Dateien pruefen und ggf. Streaming-Ansatz vorbereiten
 - [ ] `import_job_service.py`: echte asynchrone Job-Ausfuehrung mit belastbarer Statuspersistenz vorbereiten
 - [ ] Source-Validierung um Existenzpruefungen und ggf. lesbaren Zugriff erweitern
 
