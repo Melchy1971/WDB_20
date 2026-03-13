@@ -77,7 +77,7 @@ export function PstTreePage({ selectedSourceId }: Props) {
 
   return (
     <div className="page">
-      <h1>PST-Struktur</h1>
+      <h1>PST-Strukturscan</h1>
 
       {selectedSourceId === null && (
         <p className="hint">
@@ -86,7 +86,7 @@ export function PstTreePage({ selectedSourceId }: Props) {
       )}
 
       {loadState === "loading" && (
-        <p className="status-message pending">Struktur wird geladen ...</p>
+        <p className="status-message pending">PST-Struktur wird geladen ...</p>
       )}
 
       {loadState === "error" && loadError && (

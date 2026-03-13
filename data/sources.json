@@ -6,7 +6,14 @@
       "label": "Ebanf",
       "source_path": "H:\\daten",
       "created_at": "2026-03-12T14:20:09.808108+00:00"
+    },
+    {
+      "source_id": "04afb7bd-dbfd-4dd3-88e3-ba4d6ced24ec",
+      "source_type": "PST",
+      "label": "Pst",
+      "source_path": "h:\\Telekom\\",
+      "created_at": "2026-03-13T09:05:19.458817+00:00"
     }
   ],
-  "selected_source_id": null
+  "selected_source_id": "04afb7bd-dbfd-4dd3-88e3-ba4d6ced24ec"
 }

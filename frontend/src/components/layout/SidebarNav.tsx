@@ -1,4 +1,4 @@
-import type { AppPage } from "../../types/navigation";
+﻿import type { AppPage } from "../../types/navigation";
 
 type Props = {
   activePage: AppPage;
@@ -12,21 +12,21 @@ type NavItem = {
 
 const ACTIVE_ITEMS: NavItem[] = [
   { page: "system-status", label: "System Status" },
-  { page: "folder-scan",   label: "Dokumentscan" },
-  { page: "ki-settings",   label: "KI-Einstellungen" },
-  { page: "sources",       label: "Quellenverwaltung" },
+  { page: "folder-scan", label: "Datenimport (Ordner)" },
+  { page: "ki-settings", label: "KI-Einstellungen" },
+  { page: "sources", label: "Quellenverwaltung" },
 ];
 
 const PST_ITEMS: NavItem[] = [
-  { page: "pst-tree",            label: "PST-Struktur" },
-  { page: "pst-import-preview",  label: "PST-Import-Vorschau" },
-  { page: "pst-import-run",      label: "PST-Import Ergebnis" },
-  { page: "pst-import",          label: "PST-Import" },
+  { page: "pst-import", label: "PST-Scan & Import" },
+  { page: "pst-tree", label: "PST-Struktur" },
+  { page: "pst-import-preview", label: "PST-Import-Vorschau" },
+  { page: "pst-import-run", label: "PST-Import Ergebnis" },
 ];
 
 const FUTURE_ITEMS: NavItem[] = [
-  { page: "topics-review",  label: "Themenreview" },
-  { page: "analysis",       label: "KI-Analyse" },
+  { page: "topics-review", label: "Themenreview" },
+  { page: "analysis", label: "KI-Analyse" },
 ];
 
 export function SidebarNav({ activePage, onNavigate }: Props) {
@@ -71,7 +71,7 @@ export function SidebarNav({ activePage, onNavigate }: Props) {
       </div>
 
       <div className="nav-section">
-        <div className="nav-section-title">Nächste Ausbaustufen</div>
+        <div className="nav-section-title">Naechste Ausbaustufen</div>
         <ul className="nav-list">
           {FUTURE_ITEMS.map((item) => navButton(item, true))}
         </ul>

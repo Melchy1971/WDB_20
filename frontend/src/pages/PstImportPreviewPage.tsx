@@ -180,7 +180,7 @@ export function PstImportPreviewPage({ selectedSourceId, onOpenImportRun }: Prop
 
   return (
     <div className="page">
-      <h1>PST-Import-Vorschau</h1>
+      <h1>PST-Import vorbereiten</h1>
 
       {selectedSourceId === null && (
         <p className="hint">
@@ -189,7 +189,7 @@ export function PstImportPreviewPage({ selectedSourceId, onOpenImportRun }: Prop
       )}
 
       {loadState === "loading" && (
-        <p className="status-message pending">Vorschau wird geladen ...</p>
+        <p className="status-message pending">Import-Vorschau wird geladen ...</p>
       )}
 
       {loadState === "error" && loadError && (
@@ -198,7 +198,7 @@ export function PstImportPreviewPage({ selectedSourceId, onOpenImportRun }: Prop
 
       {loadState === "ready" && preview !== null && (
         <div className="panel">
-          <h2>Vorschau</h2>
+          <h2>Import-Vorschau</h2>
           {preview.status === "empty" ? (
             <p className="hint">
               Keine Knoten ausgewählt. Wählen Sie Knoten in der PST-Struktur aus und speichern Sie

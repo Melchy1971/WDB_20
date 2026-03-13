@@ -42,20 +42,29 @@ function App() {
       case "system-status":
         return <SystemStatusPage />;
       case "folder-scan":
-        return <FolderScanPage selectedSourceId={selectedSourceId} selectedSourceType={selectedSourceType} onNavigateToPstImport={() => setActivePage('pst-import-preview')} />;
+        return <FolderScanPage selectedSourceId={selectedSourceId} selectedSourceType={selectedSourceType} onNavigateToPstImport={() => setActivePage("pst-import")} />;
       case "sources":
         return (
           <SourcesPage
             selectedSourceId={selectedSourceId}
             onSelectSource={handleSelectSource}
             onContinueToScan={() => setActivePage("folder-scan")}
-            onContinueToPstTree={() => setActivePage("pst-tree")}
           />
         );
       case "topics-review":
         return <TopicsReviewPage />;
       case "pst-import":
-        return <PstImportPage />;
+        return (
+          <PstImportPage
+            selectedSourceId={selectedSourceId}
+            selectedSourceType={selectedSourceType}
+            onOpenPstTree={() => setActivePage("pst-tree")}
+            onImported={async (sourceId) => {
+              await handleSelectSource(sourceId, "PST");
+              setActivePage("pst-import");
+            }}
+          />
+        );
       case "pst-tree":
         return <PstTreePage selectedSourceId={selectedSourceId} />;
       case "pst-import-preview":

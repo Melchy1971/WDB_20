@@ -794,3 +794,87 @@ body {
   text-transform: uppercase;
   letter-spacing: 0.05em;
 }
+
+/* ── File Browser ─────────────────────────────────────────────────────── */
+.input-with-button {
+  display: flex;
+  gap: 0.5rem;
+  align-items: stretch;
+}
+
+.input-with-button .text-input {
+  flex: 1;
+  min-width: 0;
+}
+
+.file-browser {
+  margin-top: 0.5rem;
+  border: 1px solid var(--tk-border, #d1d5db);
+  border-radius: 6px;
+  background: var(--tk-bg-panel, #ffffff);
+  overflow: hidden;
+}
+
+.file-browser__toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.5rem 0.75rem;
+  background: var(--tk-bg-subtle, #f3f4f6);
+  border-bottom: 1px solid var(--tk-border, #d1d5db);
+}
+
+.file-browser__current-path {
+  font-size: var(--tk-font-size-sm, 0.875rem);
+  color: var(--tk-text-muted, #6b7280);
+  font-family: monospace;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.file-browser__list {
+  list-style: none;
+  margin: 0;
+  padding: 0.25rem 0;
+  max-height: 260px;
+  overflow-y: auto;
+}
+
+.file-browser__list li {
+  margin: 0;
+}
+
+.file-browser__entry {
+  display: block;
+  width: 100%;
+  padding: 0.35rem 0.75rem;
+  text-align: left;
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: var(--tk-font-size-sm, 0.875rem);
+  color: var(--tk-text, #111827);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.file-browser__entry:hover {
+  background: var(--tk-bg-subtle, #f3f4f6);
+}
+
+.file-browser__entry--dir {
+  color: var(--tk-color-primary, #4f46e5);
+}
+
+.file-browser__entry--pst {
+  color: var(--tk-text, #111827);
+  font-weight: 500;
+}
+
+.action-button--small {
+  padding: 0.25rem 0.6rem;
+  font-size: var(--tk-font-size-sm, 0.875rem);
+}

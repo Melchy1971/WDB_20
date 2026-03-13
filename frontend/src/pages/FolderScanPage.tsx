@@ -101,16 +101,16 @@ export function FolderScanPage({ selectedSourceId, selectedSourceType, onNavigat
 
   return (
     <div className="page">
-      <h1>Dokumentenimport</h1>
+      <h1>Datenimport</h1>
 
       <form className="panel" onSubmit={handleScan}>
-        <h2>Quelle scannen</h2>
+        <h2>Lokalen Ordner scannen</h2>
         {selectedSourceId === null ? (
           <p className="hint">Keine Quelle aktiv. Waehlen Sie zuerst eine Quelle in der Quellenverwaltung.</p>
         ) : selectedSourceType === "PST" ? (
           <div>
             <p className="status-message pending">Aktive Quelle: {selectedSourceId}</p>
-            <p className="hint">PST-Dateien werden ueber den PST-Import verarbeitet.</p>
+            <p className="hint">Dieser Bereich ist nur fuer lokale Ordner. PST-Dateien werden separat im Bereich PST-Import gescannt.</p>
             <button
               type="button"
               className="action-button"
@@ -128,7 +128,7 @@ export function FolderScanPage({ selectedSourceId, selectedSourceType, onNavigat
             type="submit"
             disabled={isScanning || isAnalyzing || selectedSourceId === null}
           >
-            {isScanning ? "Scanne ..." : isAnalyzing ? "KI analysiert ..." : "Quelle scannen"}
+            {isScanning ? "Ordner wird gescannt ..." : isAnalyzing ? "KI analysiert ..." : "Ordner scannen"}
           </button>
         )}
       </form>

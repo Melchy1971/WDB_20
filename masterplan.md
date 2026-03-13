@@ -80,7 +80,7 @@ Aktuell bzw. fachlich vorgesehen:
 - [x] Bearbeiten gespeicherter Source-Pfade implementiert
 
 ### PST Ingestion Pipeline
-- [x] PST-Struktur-Analyse ohne Inhaltsladen (`pst_parser_service`)
+- [x] PST-Strukturscan ohne Inhaltsladen (`pst_parser_service`)
 - [x] Auswahl spezifischer Unterordner fuer den Import
 - [x] Import-Job fuer Extraktion von E-Mails und Attachments
 - [x] ImportRun-Ergebnisansicht mit Polling bis Abschluss
