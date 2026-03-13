@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+
 import { browseFilesystem } from "../api/filesystemApi";
 import type { FilesystemBrowseResponse } from "../api/filesystemApi";
 import { createPstSource } from "../api/sourcesApi";
@@ -12,11 +13,27 @@ type Props = {
 
 type BrowseState = "idle" | "loading" | "error";
 
-export function PstImportPage({ selectedSourceId, selectedSourceType, onOpenPstTree, onImported }: Props) {
+function getFriendlySubmitError(error: unknown): string {
+  if (!(error instanceof Error)) {
+    return "Fehler beim Einbinden der PST-Datei.";
+  }
+  if (error.message.includes("Failed to fetch")) {
+    return "API nicht erreichbar. Prüfen Sie, ob das Backend läuft.";
+  }
+  return error.message;
+}
+
+export function PstImportPage({
+  selectedSourceId,
+  selectedSourceType,
+  onOpenPstTree,
+  onImported,
+}: Props) {
   const [label, setLabel] = useState("");
   const [pstPath, setPstPath] = useState("");
   const [submitState, setSubmitState] = useState<"idle" | "saving" | "error">("idle");
   const [submitError, setSubmitError] = useState<string | null>(null);
+  const [pathError, setPathError] = useState<string | null>(null);
 
   const [browserOpen, setBrowserOpen] = useState(false);
   const [browseState, setBrowseState] = useState<BrowseState>("idle");
@@ -31,9 +48,15 @@ export function PstImportPage({ selectedSourceId, selectedSourceType, onOpenPstT
         setBrowseData(data);
         setBrowseState("idle");
       })
-      .catch((err: unknown) => {
-        setBrowseError(err instanceof Error ? err.message : "Fehler beim Laden.");
-        setBrowseState("idle");
+      .catch((error: unknown) => {
+        const message =
+          error instanceof Error ? error.message : "Dateibrowser konnte nicht geladen werden.";
+        setBrowseError(
+          message.includes("Failed to fetch")
+            ? "API nicht erreichbar. Der Dateibrowser konnte nicht geladen werden."
+            : message
+        );
+        setBrowseState("error");
       });
   }
 
@@ -46,30 +69,43 @@ export function PstImportPage({ selectedSourceId, selectedSourceType, onOpenPstT
 
   function handleSelectFile(filePath: string): void {
     setPstPath(filePath);
+    setPathError(null);
+    setSubmitError(null);
     setBrowserOpen(false);
   }
 
-  // Reset browser when closed
   useEffect(() => {
     if (!browserOpen) {
       setBrowseError(null);
     }
   }, [browserOpen]);
 
-  async function handleSubmit(e: React.FormEvent): Promise<void> {
-    e.preventDefault();
+  async function handleSubmit(event: React.FormEvent): Promise<void> {
+    event.preventDefault();
+
+    const trimmedLabel = label.trim();
+    const trimmedPath = pstPath.trim();
+
+    if (trimmedPath === "") {
+      setPathError("Keine Datei gewählt. Wählen Sie eine PST-Datei oder geben Sie einen Netzpfad ein.");
+      setSubmitState("error");
+      return;
+    }
+
+    setPathError(null);
     setSubmitState("saving");
     setSubmitError(null);
+
     try {
-      const source = await createPstSource({ label: label.trim(), pst_file_path: pstPath.trim() });
+      const source = await createPstSource({ label: trimmedLabel, pst_file_path: trimmedPath });
       await onImported(source.source_id);
-    } catch (err) {
+    } catch (error) {
       setSubmitState("error");
-      setSubmitError(err instanceof Error ? err.message : "Fehler beim Einbinden der PST-Datei.");
+      setSubmitError(getFriendlySubmitError(error));
     }
   }
 
-  const canSubmit = submitState !== "saving" && label.trim() !== "" && pstPath.trim() !== "";
+  const canSubmit = submitState !== "saving" && label.trim() !== "";
 
   return (
     <div className="page">
@@ -77,24 +113,21 @@ export function PstImportPage({ selectedSourceId, selectedSourceType, onOpenPstT
 
       {selectedSourceId !== null && selectedSourceType === "PST" && (
         <div className="panel">
-          <h2>PST scannen</h2>
+          <h2>Aktive PST-Quelle</h2>
           <p className="status-message pending">Aktive Quelle: {selectedSourceId}</p>
-         
-         
           <div className="action-bar">
-            <button
-              type="button"
-              className="action-button"
-              onClick={onOpenPstTree}
-            >
-              PST scannen
+            <button type="button" className="action-button" onClick={onOpenPstTree}>
+              Ordnerstruktur anzeigen
             </button>
           </div>
         </div>
       )}
 
-      <form className="panel" onSubmit={(e) => void handleSubmit(e)}>
+      <form className="panel" onSubmit={(event) => void handleSubmit(event)}>
         <h2>Neue PST-Datei einbinden</h2>
+        <p className="hint">
+          Unterstützt lokale Pfade und UNC-Netzpfade wie <code>\\Server\Share\archiv.pst</code>.
+        </p>
 
         <label className="label" htmlFor="pst-label">
           Name
@@ -104,7 +137,7 @@ export function PstImportPage({ selectedSourceId, selectedSourceType, onOpenPstT
           className="text-input"
           type="text"
           value={label}
-          onChange={(e) => setLabel(e.target.value)}
+          onChange={(event) => setLabel(event.target.value)}
           placeholder="z. B. Postfach Archiv 2023"
           required
         />
@@ -118,8 +151,13 @@ export function PstImportPage({ selectedSourceId, selectedSourceType, onOpenPstT
             className="text-input"
             type="text"
             value={pstPath}
-            onChange={(e) => setPstPath(e.target.value)}
-            placeholder={`z. B. C:\\Daten\\archiv.pst  oder  \\\\Server\\Share\\archiv.pst`}
+            onChange={(event) => {
+              setPstPath(event.target.value);
+              if (pathError !== null) {
+                setPathError(null);
+              }
+            }}
+            placeholder={"z. B. C:\\Daten\\archiv.pst oder \\\\Server\\Share\\archiv.pst"}
             required
           />
           <button
@@ -127,16 +165,16 @@ export function PstImportPage({ selectedSourceId, selectedSourceType, onOpenPstT
             className="action-button action-button--secondary"
             onClick={openBrowser}
           >
-            Durchsuchen …
+            Durchsuchen ...
           </button>
         </div>
+
+        {pathError && <p className="status-message error">{pathError}</p>}
 
         {browserOpen && (
           <div className="file-browser">
             <div className="file-browser__toolbar">
-              <span className="file-browser__current-path">
-                {browseData?.current_path || "Laufwerke"}
-              </span>
+              <span className="file-browser__current-path">{browseData?.current_path || "Laufwerke"}</span>
               <button
                 type="button"
                 className="action-button action-button--secondary action-button--small"
@@ -146,13 +184,8 @@ export function PstImportPage({ selectedSourceId, selectedSourceType, onOpenPstT
               </button>
             </div>
 
-            {browseState === "loading" && (
-              <p className="status-message pending">Lade ...</p>
-            )}
-
-            {browseError && (
-              <p className="status-message error">{browseError}</p>
-            )}
+            {browseState === "loading" && <p className="status-message pending">Lade ...</p>}
+            {browseError && <p className="status-message error">{browseError}</p>}
 
             {browseState === "idle" && browseData && (
               <ul className="file-browser__list">
@@ -161,14 +194,19 @@ export function PstImportPage({ selectedSourceId, selectedSourceType, onOpenPstT
                     <button
                       type="button"
                       className="file-browser__entry file-browser__entry--dir"
-                      onClick={() => navigateTo(browseData.parent_path === "" ? undefined : browseData.parent_path)}
+                      onClick={() => {
+                        const parentPath = browseData.parent_path;
+                        navigateTo(parentPath === null || parentPath === "" ? undefined : parentPath);
+                      }}
                     >
                       ↑ ..
                     </button>
                   </li>
                 )}
                 {browseData.entries.length === 0 && (
-                  <li><span className="hint">Keine Ordner oder PST-Dateien gefunden.</span></li>
+                  <li>
+                    <span className="hint">Keine Ordner oder PST-Dateien gefunden.</span>
+                  </li>
                 )}
                 {browseData.entries.map((entry) => (
                   <li key={entry.path}>
@@ -178,7 +216,7 @@ export function PstImportPage({ selectedSourceId, selectedSourceType, onOpenPstT
                         className="file-browser__entry file-browser__entry--dir"
                         onClick={() => navigateTo(entry.path)}
                       >
-                        📁 {entry.name}
+                        [DIR] {entry.name}
                       </button>
                     ) : (
                       <button
@@ -186,7 +224,7 @@ export function PstImportPage({ selectedSourceId, selectedSourceType, onOpenPstT
                         className="file-browser__entry file-browser__entry--pst"
                         onClick={() => handleSelectFile(entry.path)}
                       >
-                        📄 {entry.name}
+                        [PST] {entry.name}
                       </button>
                     )}
                   </li>
@@ -198,12 +236,8 @@ export function PstImportPage({ selectedSourceId, selectedSourceType, onOpenPstT
 
         {submitError && <p className="status-message error">{submitError}</p>}
 
-        <button
-          type="submit"
-          className="action-button"
-          disabled={!canSubmit}
-        >
-          {submitState === "saving" ? "Einbinden ..." : "PST einbinden"}
+        <button type="submit" className="action-button" disabled={!canSubmit}>
+          {submitState === "saving" ? "Einbinden ..." : "PST einbinden und Struktur laden"}
         </button>
       </form>
     </div>

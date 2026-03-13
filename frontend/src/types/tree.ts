@@ -1,23 +1,22 @@
-/**
- * Repräsentiert einen Knoten im PST-Verzeichnisbaum.
- *
- * node_type:
- *   "folder"     — Ordner (Inbox, Sent, benutzerdefinierte Ordner …)
- *   "message"    — E-Mail-Nachricht (Blatt)
- *   "attachment" — Anhang (Blatt)
- */
 export type TreeNodeType = "folder" | "message" | "attachment";
 
-export type TreeNode = {
+export type PstFolderNode = {
   id: string;
   name: string;
+  path: string;
+  parent_path: string | null;
+  has_children: boolean;
+  message_count: number;
+  children: PstFolderNode[];
   node_type: TreeNodeType;
-  item_count?: number; // nur bei Ordnern sinnvoll
-  children: TreeNode[];
+  item_count?: number | null;
 };
 
-/** GET /sources/{source_id}/tree */
-export type SourceTreeResponse = {
-  source_id: string;
-  root: TreeNode;
+export type PstTreeResponse = {
+  source_id: string | null;
+  source_path: string;
+  root: PstFolderNode;
 };
+
+export type TreeNode = PstFolderNode;
+export type SourceTreeResponse = PstTreeResponse;

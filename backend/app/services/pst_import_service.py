@@ -229,13 +229,12 @@ def collect_valid_node_ids(tree: SourceTreeResponse) -> set[str]:
 def build_folder_path_index(tree: SourceTreeResponse) -> dict[str, str]:
     index: dict[str, str] = {}
 
-    def walk(node: TreeNode, parent_path: str | None) -> None:
-        current_path = node.name if parent_path is None else f"{parent_path}/{node.name}"
-        index[node.id] = current_path
+    def walk(node: TreeNode) -> None:
+        index[node.id] = node.path
         for child in node.children:
-            walk(child, current_path)
+            walk(child)
 
-    walk(tree.root, None)
+    walk(tree.root)
     return index
 
 

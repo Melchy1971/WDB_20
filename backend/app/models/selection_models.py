@@ -1,21 +1,19 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 
 class SourceSelectionResponse(BaseModel):
-    """GET /sources/{source_id}/selection — Response."""
-
     source_id: str
     selected_node_ids: list[str]
+    selected_folder_paths: list[str]
+    selected_count: int
 
 
 class UpdateSourceSelectionRequest(BaseModel):
-    """POST /sources/{source_id}/selection — Request-Body."""
-
-    selected_node_ids: list[str]
+    selected_node_ids: list[str] = Field(default_factory=list)
 
 
 class UpdateSourceSelectionResponse(BaseModel):
-    """POST /sources/{source_id}/selection — Response."""
-
     source_id: str
     selected_node_ids: list[str]
+    selected_folder_paths: list[str]
+    selected_count: int

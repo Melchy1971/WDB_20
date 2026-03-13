@@ -61,12 +61,17 @@ function App() {
             onOpenPstTree={() => setActivePage("pst-tree")}
             onImported={async (sourceId) => {
               await handleSelectSource(sourceId, "PST");
-              setActivePage("pst-import");
+              setActivePage("pst-tree");
             }}
           />
         );
       case "pst-tree":
-        return <PstTreePage selectedSourceId={selectedSourceId} />;
+        return (
+          <PstTreePage
+            selectedSourceId={selectedSourceId}
+            onOpenImportPreview={() => setActivePage("pst-import-preview")}
+          />
+        );
       case "pst-import-preview":
         return (
           <PstImportPreviewPage

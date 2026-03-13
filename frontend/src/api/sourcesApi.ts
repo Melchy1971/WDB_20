@@ -7,7 +7,7 @@ import type {
   Source,
   UpdateSourcePathRequest,
 } from "../types/source";
-import type { SourceTreeResponse } from "../types/tree";
+import type { PstTreeResponse } from "../types/tree";
 import type { ScanAnalysisResponse } from "../types/analysis";
 
 export function listSources(): Promise<Source[]> {
@@ -36,8 +36,13 @@ export function scanSource(sourceId: string): Promise<DocumentScanResponse> {
   return apiPost<object, DocumentScanResponse>(`/sources/${sourceId}/scan`, {});
 }
 
-export function fetchSourceTree(sourceId: string): Promise<SourceTreeResponse> {
-  return apiGet<SourceTreeResponse>(`/sources/${sourceId}/tree`);
+export function fetchSourceTree(sourceId: string): Promise<PstTreeResponse> {
+  return apiGet<PstTreeResponse>(`/sources/${sourceId}/tree`);
+}
+
+export function fetchPstTreeByPath(path: string): Promise<PstTreeResponse> {
+  const query = `?path=${encodeURIComponent(path)}`;
+  return apiGet<PstTreeResponse>(`/sources/pst/tree${query}`);
 }
 
 export function deleteSource(sourceId: string): Promise<Source> {

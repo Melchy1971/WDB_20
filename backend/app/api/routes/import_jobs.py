@@ -1,5 +1,8 @@
+import logging
+
 from fastapi import APIRouter, HTTPException
 
+from app.adapters.pst_archive_adapter import PstError
 from app.models.job_models import (
     ImportJobStatusResponse,
     StartImportJobRequest,
@@ -7,6 +10,8 @@ from app.models.job_models import (
 )
 from app.services import import_job_service, source_registry_service, source_selection_service
 from app.services.pst_parser_service import PstParserService
+
+logger = logging.getLogger(__name__)
 
 
 def _build_job_response_payload(job):
@@ -25,23 +30,18 @@ def _build_job_response_payload(job):
 def _build_pst_tree_or_raise(source_id: str, pst_path: str):
     try:
         return PstParserService.build_tree(
-            source_id=source_id,
             pst_path=pst_path,
+            source_id=source_id,
         )
-    except ImportError as exc:
-        raise HTTPException(
-            status_code=503,
-            detail=f"PST-Parser nicht verfügbar: {exc}",
-        ) from exc
-    except FileNotFoundError as exc:
-        raise HTTPException(status_code=422, detail=str(exc)) from exc
-    except OSError as exc:
-        raise HTTPException(
-            status_code=422,
-            detail=f"PST-Datei konnte nicht gelesen werden: {exc}",
-        ) from exc
+    except PstError as exc:
+        logger.warning(
+            "PST-Import-Job konnte Tree nicht laden",
+            extra={"pst_path": pst_path, "source_id": source_id, "pst_error_code": exc.code},
+            exc_info=exc,
+        )
+        raise HTTPException(status_code=exc.status_code, detail=exc.to_client_detail()) from exc
 
-# ── Router: POST /sources/{source_id}/import-jobs ─────────────────────────────
+
 sources_import_router = APIRouter(prefix="/sources", tags=["import-jobs"])
 
 
@@ -57,7 +57,7 @@ sources_import_router = APIRouter(prefix="/sources", tags=["import-jobs"])
 )
 def start_import_job(
     source_id: str,
-    body: StartImportJobRequest,  # noqa: ARG001 – reserviert für zukünftige Optionen
+    body: StartImportJobRequest,  # noqa: ARG001
 ) -> StartImportJobResponse:
     source = source_registry_service.get_source(source_id)
     if source is None:
@@ -78,7 +78,7 @@ def start_import_job(
     if len(selected_node_ids) == 0:
         raise HTTPException(
             status_code=400,
-
+            detail="PST_SELECTION_EMPTY: Keine PST-Ordner ausgewählt.",
         )
 
     job = import_job_service.start_import_job(
@@ -90,7 +90,6 @@ def start_import_job(
     return StartImportJobResponse(**_build_job_response_payload(job))
 
 
-# ── Router: GET /import-jobs/{job_id} ─────────────────────────────────────────
 import_jobs_router = APIRouter(prefix="/import-jobs", tags=["import-jobs"])
 
 
