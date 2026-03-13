@@ -1,5 +1,8 @@
 from __future__ import annotations
 
+import hashlib
+import logging
+from collections.abc import Callable
 from datetime import datetime, timezone
 from email.utils import getaddresses
 from pathlib import Path
@@ -9,14 +12,47 @@ from uuid import uuid4
 from app.models.pst_import_models import ImportRun, ImportedAttachment, ImportedEmail
 from app.models.tree_models import SourceTreeResponse, TreeNode
 
+logger = logging.getLogger(__name__)
+
+ProgressCallback = Callable[[int, int], None]
+
+
+class DuplicateMessageRegistry(Protocol):
+    def is_duplicate(self, dedup_key: str, email: ImportedEmail, run: ImportRun) -> bool:
+        ...
+
+
+class NoOpDuplicateMessageRegistry:
+    def is_duplicate(self, dedup_key: str, email: ImportedEmail, run: ImportRun) -> bool:
+        return False
+
 
 class PstMailExtractor(Protocol):
-    def extract_from_run(self, run: ImportRun) -> list[ImportedEmail]:
+    def extract_from_run(
+        self,
+        run: ImportRun,
+        progress_callback: ProgressCallback | None = None,
+    ) -> list[ImportedEmail]:
         ...
 
 
 def count_attachments(emails: list[ImportedEmail]) -> int:
     return sum(len(email.attachments) for email in emails)
+
+
+def calculate_progress_percent(run: ImportRun) -> float | None:
+    total_units = run.total_folder_count + run.total_message_count_estimate
+    processed_units = run.processed_folder_count + run.processed_message_count
+
+    if total_units <= 0:
+        if run.status == "finished":
+            return 100.0
+        if run.status in {"queued", "running"}:
+            return None
+        return 0.0
+
+    percent = (processed_units / total_units) * 100
+    return round(min(percent, 100.0), 2)
 
 
 def _load_libratom_archive_type() -> Any:
@@ -98,7 +134,7 @@ def _message_id(message: object) -> str:
         if value:
             return value
 
-    raise OSError("Nachricht ohne verwertbare message_id gefunden.")
+    return ""
 
 
 def _message_attachments(message: object) -> list[ImportedAttachment]:
@@ -154,8 +190,37 @@ def _iter_folders_with_paths(root_folder: Any):
             stack.append((sub_folder, f"{folder_path}/{sub_name}"))
 
 
+def _normalize_for_hash(value: str | None) -> str:
+    return (value or "").strip().lower()
+
+
+def build_dedup_key(email: ImportedEmail) -> str:
+    if email.message_id.strip():
+        return f"message-id:{email.message_id.strip().lower()}"
+
+    sent_at = email.sent_at.isoformat() if email.sent_at is not None else ""
+    body_excerpt = _normalize_for_hash(email.body_text)[:512]
+    raw = "||".join(
+        [
+            _normalize_for_hash(email.subject),
+            _normalize_for_hash(email.sender),
+            sent_at,
+            body_excerpt,
+        ]
+    )
+    digest = hashlib.sha256(raw.encode("utf-8")).hexdigest()
+    return f"fallback:{digest}"
+
+
 class LibratomPstMailExtractor:
-    def extract_from_run(self, run: ImportRun) -> list[ImportedEmail]:
+    def __init__(self, duplicate_registry: DuplicateMessageRegistry | None = None) -> None:
+        self._duplicate_registry = duplicate_registry or NoOpDuplicateMessageRegistry()
+
+    def extract_from_run(
+        self,
+        run: ImportRun,
+        progress_callback: ProgressCallback | None = None,
+    ) -> list[ImportedEmail]:
         archive_type: Any = _load_libratom_archive_type()
         archive: Any = archive_type()
         archive.load(str(Path(run.source_path)))
@@ -172,7 +237,11 @@ class LibratomPstMailExtractor:
                 raise OSError("Root-Ordner für PST-Extraktion konnte nicht ermittelt werden.")
 
             selected_ids = set(run.selected_node_ids)
+            dedup_keys_seen: set[str] = set()
             emails: list[ImportedEmail] = []
+            processed_folder_count = 0
+            processed_message_count = 0
+            duplicate_count = 0
 
             for folder, folder_path in _iter_folders_with_paths(root_folder):
                 folder_id = _safe_text(getattr(folder, "identifier", None))
@@ -189,19 +258,42 @@ class LibratomPstMailExtractor:
                         sub_messages = []
 
                 for message in sub_messages:
-                    emails.append(
-                        ImportedEmail(
-                            subject=_safe_text(getattr(message, "subject", None)).strip() or None,
-                            sender=_message_sender(message),
-                            recipients=_message_recipients(message),
-                            sent_at=_message_sent_at(message),
-                            body_text=_message_body_text(message),
-                            message_id=_message_id(message),
-                            source_folder_path=folder_path,
-                            attachments=_message_attachments(message),
-                        )
+                    email = ImportedEmail(
+                        subject=_safe_text(getattr(message, "subject", None)).strip() or None,
+                        sender=_message_sender(message),
+                        recipients=_message_recipients(message),
+                        sent_at=_message_sent_at(message),
+                        body_text=_message_body_text(message),
+                        message_id=_message_id(message),
+                        source_folder_path=folder_path,
+                        attachments=_message_attachments(message),
                     )
+                    processed_message_count += 1
+                    dedup_key = build_dedup_key(email)
 
+                    if dedup_key in dedup_keys_seen or self._duplicate_registry.is_duplicate(dedup_key, email, run):
+                        duplicate_count += 1
+                        logger.info(
+                            "PST-Dublette verworfen",
+                            extra={
+                                "import_run_id": run.import_run_id,
+                                "dedup_key": dedup_key,
+                                "message_id": email.message_id,
+                                "source_folder_path": email.source_folder_path,
+                            },
+                        )
+                    else:
+                        dedup_keys_seen.add(dedup_key)
+                        emails.append(email)
+
+                    if progress_callback is not None:
+                        progress_callback(processed_folder_count, processed_message_count)
+
+                processed_folder_count += 1
+                if progress_callback is not None:
+                    progress_callback(processed_folder_count, processed_message_count)
+
+            run.duplicate_count = duplicate_count
             return emails
         finally:
             close_method: Any = getattr(archive, "close", None)
@@ -238,6 +330,18 @@ def build_folder_path_index(tree: SourceTreeResponse) -> dict[str, str]:
     return index
 
 
+def build_message_count_estimate_index(tree: SourceTreeResponse) -> dict[str, int]:
+    index: dict[str, int] = {}
+
+    def walk(node: TreeNode) -> None:
+        index[node.id] = node.message_count
+        for child in node.children:
+            walk(child)
+
+    walk(tree.root)
+    return index
+
+
 def build_import_run(
     source_id: str,
     source_path: str,
@@ -245,6 +349,7 @@ def build_import_run(
     tree: SourceTreeResponse,
 ) -> ImportRun:
     folder_path_index = build_folder_path_index(tree)
+    message_count_index = build_message_count_estimate_index(tree)
     valid_ids = collect_valid_node_ids(tree)
 
     normalized_selected_ids: list[str] = []
@@ -262,8 +367,9 @@ def build_import_run(
         for node_id in normalized_selected_ids
         if node_id in folder_path_index
     ]
+    total_message_count_estimate = sum(message_count_index.get(node_id, 0) for node_id in normalized_selected_ids)
 
-    return ImportRun(
+    run = ImportRun(
         import_run_id=str(uuid4()),
         source_id=source_id,
         source_path=source_path,
@@ -271,4 +377,12 @@ def build_import_run(
         selected_folder_paths=selected_folder_paths,
         status="queued",
         started_at=datetime.now(timezone.utc),
+        total_folder_count=len(normalized_selected_ids),
+        processed_folder_count=0,
+        total_message_count_estimate=total_message_count_estimate,
+        processed_message_count=0,
+        imported_count=0,
+        duplicate_count=0,
     )
+    run.progress_percent = calculate_progress_percent(run)
+    return run

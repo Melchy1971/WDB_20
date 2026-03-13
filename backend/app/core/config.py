@@ -12,6 +12,8 @@ class Settings(BaseSettings):
     app_env: str = "dev"
     api_host: str = "127.0.0.1"
     api_port: int = 8000
+    pst_neo4j_batch_size: int = 100
+    pst_neo4j_continue_on_batch_error: bool = False
 
     neo4j_uri: str = Field(default="neo4j://your-neo4j-host:7687")
     neo4j_user: str = Field(default="neo4j")

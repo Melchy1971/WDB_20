@@ -24,6 +24,13 @@ const IMPORT_RUN_STATUS_CLASS: Record<ImportRun["status"], string> = {
   failed: "error",
 };
 
+function formatProgress(value: number | null): string {
+  if (value === null) {
+    return "Unbekannt";
+  }
+  return `${value.toFixed(1)} %`;
+}
+
 export function PstImportRunPage({ selectedImportRunId }: Props) {
   const [run, setRun] = useState<ImportRun | null>(null);
   const [loadState, setLoadState] = useState<LoadState>("idle");
@@ -101,6 +108,18 @@ export function PstImportRunPage({ selectedImportRunId }: Props) {
       {loadState === "ready" && run !== null && (
         <div className="panel">
           <h2>ImportRun</h2>
+          <div className="import-progress">
+            <div className="import-progress__header">
+              <span>Fortschritt</span>
+              <strong>{formatProgress(run.progress_percent)}</strong>
+            </div>
+            <div className="import-progress__bar" aria-hidden="true">
+              <div
+                className="import-progress__fill"
+                style={{ width: `${Math.max(0, Math.min(run.progress_percent ?? 0, 100))}%` }}
+              />
+            </div>
+          </div>
           <dl className="card__meta">
             <dt>ImportRun-ID</dt>
             <dd>{run.import_run_id}</dd>
@@ -114,6 +133,19 @@ export function PstImportRunPage({ selectedImportRunId }: Props) {
             <dd>{run.email_count}</dd>
             <dt>Attachments</dt>
             <dd>{run.attachment_count}</dd>
+            <dt>Ordner</dt>
+            <dd>{run.processed_folder_count} / {run.total_folder_count}</dd>
+            <dt>Nachrichten</dt>
+            <dd>
+              {run.processed_message_count}
+              {run.total_message_count_estimate > 0 ? ` / ${run.total_message_count_estimate}` : " / unbekannt"}
+            </dd>
+            <dt>Batches</dt>
+            <dd>
+              {run.processed_batches}
+              {run.failed_batches > 0 ? ` erfolgreich, ${run.failed_batches} fehlgeschlagen` : " erfolgreich"}
+              {run.batch_size !== null ? ` (Batch-Größe ${run.batch_size})` : ""}
+            </dd>
             <dt>Fehler</dt>
             <dd>{run.error_message ?? "-"}</dd>
           </dl>

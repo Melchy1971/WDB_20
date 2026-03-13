@@ -23,6 +23,14 @@ export type ImportRun = {
   selected_node_ids: string[];
   email_count: number;
   attachment_count: number;
+  total_folder_count: number;
+  processed_folder_count: number;
+  total_message_count_estimate: number;
+  processed_message_count: number;
+  progress_percent: number | null;
+  processed_batches: number;
+  failed_batches: number;
+  batch_size: number | null;
   error_message: string | null;
   status: ImportRunStatus;
   imported_emails: ImportedEmail[];

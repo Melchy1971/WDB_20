@@ -34,7 +34,17 @@ class ImportRun(BaseModel):
     finished_at: datetime | None = None
     error_message: str | None = None
     email_count: int = 0
+    imported_count: int = 0
+    duplicate_count: int = 0
     attachment_count: int = 0
+    total_folder_count: int = 0
+    processed_folder_count: int = 0
+    total_message_count_estimate: int = 0
+    processed_message_count: int = 0
+    progress_percent: float | None = None
+    processed_batches: int = 0
+    failed_batches: int = 0
+    batch_size: int | None = None
     imported_emails: list[ImportedEmail] = Field(default_factory=list)
 
 
@@ -43,7 +53,17 @@ class ImportRunResponse(BaseModel):
     source_id: str
     selected_node_ids: list[str] = Field(default_factory=list)
     email_count: int
+    imported_count: int = 0
+    duplicate_count: int = 0
     attachment_count: int
+    total_folder_count: int = 0
+    processed_folder_count: int = 0
+    total_message_count_estimate: int = 0
+    processed_message_count: int = 0
+    progress_percent: float | None = None
+    processed_batches: int = 0
+    failed_batches: int = 0
+    batch_size: int | None = None
     error_message: str | None = None
     status: ImportRunStatus
     imported_emails: list[ImportedEmail] = Field(default_factory=list)
